@@ -1,0 +1,27 @@
+.notion-editor-wrap {
+  --notion-bg: #ffffff;
+  --notion-text: #37352f;
+  --notion-text-secondary: #787774;
+  --notion-border: #e5e5e3;
+  --notion-toolbar-bg: #ffffff;
+  --notion-hover: #f1f1ef;
+  --notion-code-bg: #f7f6f3;
+  --notion-selection: #d3e5ef;
+  --notion-drag-handle: #c4c4c2;
+  --notion-slash-bg: #ffffff;
+  --notion-slash-shadow: 0 1px 6px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.notion-editor-wrap[data-theme="dark"] {
+  --notion-bg: #191919;
+  --notion-text: #e3e2e0;
+  --notion-text-secondary: #9b9a97;
+  --notion-border: #373737;
+  --notion-toolbar-bg: #252525;
+  --notion-hover: #2f2f2f;
+  --notion-code-bg: #252525;
+  --notion-selection: #2d4a5e;
+  --notion-drag-handle: #5a5a5a;
+  --notion-slash-bg: #252525;
+  --notion-slash-shadow: 0 1px 6px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}

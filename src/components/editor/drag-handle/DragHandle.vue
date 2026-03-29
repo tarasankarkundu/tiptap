@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, onBeforeUnmount } from 'vue'
 import type { Editor } from '@tiptap/core'
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
@@ -32,12 +32,25 @@ function getBlockAtY(y: number): HTMLElement | null {
 }
 
 function resolveBlockPos(blockEl: HTMLElement): { pos: number; nodeSize: number } | null {
-  const pos = props.editor.view.posAtDOM(blockEl, 0)
-  const $pos = props.editor.state.doc.resolve(pos)
-  const before = $pos.before($pos.depth)
-  const node = props.editor.state.doc.nodeAt(before)
-  if (!node) return null
-  return { pos: before, nodeSize: node.nodeSize }
+  // Walk the doc's top-level children and match by their DOM representation
+  const { doc } = props.editor.state
+  let pos = 0
+  for (let i = 0; i < doc.childCount; i++) {
+    const child = doc.child(i)
+    try {
+      const dom = props.editor.view.nodeDOM(pos)
+      // nodeDOM returns the outermost DOM node for this ProseMirror node.
+      // For node views, it returns the [data-node-view-wrapper] container.
+      // Check if it matches or contains our block element.
+      if (dom === blockEl || (dom instanceof HTMLElement && blockEl.contains(dom)) || (dom instanceof HTMLElement && dom.contains(blockEl))) {
+        return { pos, nodeSize: child.nodeSize }
+      }
+    } catch {
+      // nodeDOM can throw for some positions
+    }
+    pos += child.nodeSize
+  }
+  return null
 }
 
 function handleMouseMove(event: MouseEvent) {
@@ -168,13 +181,49 @@ function handlePlusClick() {
     .run()
 }
 
+// Register drag event handlers in capture phase so they fire BEFORE ProseMirror
+function onContainerDragOver(event: DragEvent) {
+  if (!isDragging.value) return
+  event.stopPropagation()
+  handleBodyDragOver(event)
+}
+
+function onContainerDragLeave() {
+  if (!isDragging.value) return
+  handleBodyDragLeave()
+}
+
+function onContainerDrop(event: DragEvent) {
+  if (!isDragging.value) return
+  event.stopPropagation()
+  handleBodyDrop(event)
+}
+
+let cleanupListeners: (() => void) | null = null
+
+watch(() => props.containerEl, (el, oldEl) => {
+  cleanupListeners?.()
+  cleanupListeners = null
+  if (!el) return
+
+  el.addEventListener('dragover', onContainerDragOver, true)
+  el.addEventListener('dragleave', onContainerDragLeave, true)
+  el.addEventListener('drop', onContainerDrop, true)
+
+  cleanupListeners = () => {
+    el.removeEventListener('dragover', onContainerDragOver, true)
+    el.removeEventListener('dragleave', onContainerDragLeave, true)
+    el.removeEventListener('drop', onContainerDrop, true)
+  }
+}, { immediate: true })
+
+onBeforeUnmount(() => {
+  cleanupListeners?.()
+})
+
 defineExpose({
   handleMouseMove,
   handleMouseLeave,
-  handleBodyDragOver,
-  handleBodyDragLeave,
-  handleBodyDrop,
-  handleDragEnd,
 })
 </script>
 

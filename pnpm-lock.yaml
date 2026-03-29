@@ -41,6 +41,9 @@ importers:
       '@tiptap/extension-table-header':
         specifier: ^3.21.0
         version: 3.21.0(@tiptap/extension-table@3.21.0(@tiptap/core@3.19.0(@tiptap/pm@3.19.0))(@tiptap/pm@3.19.0))
+      '@tiptap/extension-table-of-contents':
+        specifier: ^3.21.0
+        version: 3.21.0(@tiptap/core@3.19.0(@tiptap/pm@3.19.0))(@tiptap/pm@3.19.0)
       '@tiptap/extension-table-row':
         specifier: ^3.21.0
         version: 3.21.0(@tiptap/extension-table@3.21.0(@tiptap/core@3.19.0(@tiptap/pm@3.19.0))(@tiptap/pm@3.19.0))
@@ -931,6 +934,12 @@ packages:
     resolution: {integrity: sha512-3IgtyFwBi+um1+HgywHAxLpZjJFoueDM4r2FKroSrvhAl+v1Z6d4BYp8dzRRimlee6QFx0hCE+VXpFvd83aiZw==}
     peerDependencies:
       '@tiptap/extension-table': ^3.21.0
+
+  '@tiptap/extension-table-of-contents@3.21.0':
+    resolution: {integrity: sha512-SLUAQ9EIbq31HVyNFiA00Nnm47qteloCMb9ztB7+abdzEj+HRp3w9CD25aPXaPfcCF5vP5BSwNzERw44uLp1dA==}
+    peerDependencies:
+      '@tiptap/core': ^3.21.0
+      '@tiptap/pm': ^3.21.0
 
   '@tiptap/extension-table-row@3.21.0':
     resolution: {integrity: sha512-A1uL9O5atz2ZBtLpikSXBwiULjg3FJBVBIwtpyHkUdA9V13yS/NnFqt2jrKgT1g3EGwGjkqgY7uK9OF8e2XJhg==}
@@ -2234,6 +2243,10 @@ packages:
     peerDependencies:
       browserslist: '>= 4.21.0'
 
+  uuid@10.0.0:
+    resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
+    hasBin: true
+
   vaul-vue@0.4.1:
     resolution: {integrity: sha512-A6jOWOZX5yvyo1qMn7IveoWN91mJI5L3BUKsIwkg6qrTGgHs1Sb1JF/vyLJgnbN1rH4OOOxFbtqL9A46bOyGUQ==}
     peerDependencies:
@@ -3148,6 +3161,12 @@ snapshots:
   '@tiptap/extension-table-header@3.21.0(@tiptap/extension-table@3.21.0(@tiptap/core@3.19.0(@tiptap/pm@3.19.0))(@tiptap/pm@3.19.0))':
     dependencies:
       '@tiptap/extension-table': 3.21.0(@tiptap/core@3.19.0(@tiptap/pm@3.19.0))(@tiptap/pm@3.19.0)
+
+  '@tiptap/extension-table-of-contents@3.21.0(@tiptap/core@3.19.0(@tiptap/pm@3.19.0))(@tiptap/pm@3.19.0)':
+    dependencies:
+      '@tiptap/core': 3.19.0(@tiptap/pm@3.19.0)
+      '@tiptap/pm': 3.19.0
+      uuid: 10.0.0
 
   '@tiptap/extension-table-row@3.21.0(@tiptap/extension-table@3.21.0(@tiptap/core@3.19.0(@tiptap/pm@3.19.0))(@tiptap/pm@3.19.0))':
     dependencies:
@@ -4676,6 +4695,8 @@ snapshots:
       browserslist: 4.28.1
       escalade: 3.2.0
       picocolors: 1.1.1
+
+  uuid@10.0.0: {}
 
   vaul-vue@0.4.1(reka-ui@2.9.2(vue@3.5.28(typescript@5.9.3)))(vue@3.5.28(typescript@5.9.3)):
     dependencies:

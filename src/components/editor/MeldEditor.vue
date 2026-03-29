@@ -155,9 +155,6 @@ defineExpose<MeldEditorExposed>({
             :style="{ maxWidth, paddingLeft: '56px', paddingRight: '16px' }"
             @mousemove="dragHandleRef?.handleMouseMove($event)"
             @mouseleave="dragHandleRef?.handleMouseLeave()"
-            @dragover="dragHandleRef?.handleBodyDragOver($event)"
-            @dragleave="dragHandleRef?.handleBodyDragLeave()"
-            @drop="dragHandleRef?.handleBodyDrop($event)"
         >
             <!-- Drag handle -->
             <DragHandle

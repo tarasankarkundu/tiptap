@@ -9,7 +9,9 @@ import { TableHeader } from '@tiptap/extension-table-header'
 import { TableCell } from '@tiptap/extension-table-cell'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { Placeholder } from '@tiptap/extension-placeholder'
+import { TableOfContents } from '@tiptap/extension-table-of-contents'
 import { ResizableImage } from './image/ResizableImageExtension'
+import { TocNode } from './toc/TocExtension'
 import { createSlashCommandExtension } from './slash-commands/SlashCommandExtension'
 import { defaultSlashCommands } from './slash-commands/defaultSlashCommands'
 import {
@@ -51,6 +53,9 @@ export function createDefaultExtensions(options: {
     )
     exts.push(TableRow, TableHeader, TableCell)
   }
+
+  // Table of Contents (always included — the node view + heading tracker)
+  exts.push(TableOfContents, TocNode)
 
   if (d.textAlign !== false) {
     exts.push(

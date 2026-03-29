@@ -1,15 +1,24 @@
 import type { Editor } from '@tiptap/core'
 import type { SlashCommandItem } from '../types'
 import {
-  IconH1, IconH2, IconH3, IconList, IconListNumbers,
+  IconLetterT, IconH1, IconH2, IconH3, IconList, IconListNumbers,
   IconListCheck, IconBlockquote, IconCode, IconSeparator,
-  IconTable, IconPhoto,
+  IconTable, IconPhoto, IconListTree,
 } from '@meldui/tabler-vue'
 
 export function defaultSlashCommands(
   onImageInsert?: () => void,
 ): SlashCommandItem[] {
   return [
+    {
+      title: 'Text',
+      description: 'Plain text paragraph',
+      icon: IconLetterT,
+      keywords: ['paragraph', 'plain', 'normal'],
+      command: (editor: Editor) => {
+        editor.chain().focus().clearNodes().run()
+      },
+    },
     {
       title: 'Heading 1',
       description: 'Large section heading',
@@ -89,6 +98,15 @@ export function defaultSlashCommands(
       keywords: ['hr', 'divider', 'line'],
       command: (editor: Editor) => {
         editor.chain().focus().setHorizontalRule().run()
+      },
+    },
+    {
+      title: 'Table of Contents',
+      description: 'Auto-generated from headings',
+      icon: IconListTree,
+      keywords: ['toc', 'outline', 'navigation'],
+      command: (editor: Editor) => {
+        editor.chain().focus().insertContent({ type: 'tableOfContentsNode' }).run()
       },
     },
     {

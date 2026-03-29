@@ -190,6 +190,7 @@ defineExpose<MeldEditorExposed>({
         <!-- Image URL Dialog -->
         <ImageUrlDialog
             :open="imageDialogOpen"
+            :on-upload="props.onImageUpload"
             @update:open="imageDialogOpen = $event"
             @submit="onImageDialogSubmit"
         />

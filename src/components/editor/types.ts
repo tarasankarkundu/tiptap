@@ -62,6 +62,8 @@ export interface MeldEditorProps {
   placeholder?: string
   maxWidth?: string
   minHeight?: string
+  /** Callback to upload an image file. Should return the URL of the uploaded image. */
+  onImageUpload?: (file: File) => Promise<string>
   customComponents?: CustomComponentRegistration[]
 }
 

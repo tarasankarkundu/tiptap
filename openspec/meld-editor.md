@@ -109,6 +109,8 @@ const content = ref('<p>Hello world</p>')
 | `placeholder` | `string` | `'Type / for commands...'` | Placeholder text for empty editor |
 | `maxWidth` | `string` | `'900px'` | CSS max-width for the content area |
 | `minHeight` | `string` | `'300px'` | CSS min-height for the editor |
+| **Image upload** |||
+| `onImageUpload` | `(file: File) => Promise<string>` | — | Callback to upload image file. Returns the URL of the uploaded image. |
 | `customComponents` | `CustomComponentRegistration[]` | — | Register custom block types (Phase 2) |
 
 **`DefaultExtensionOptions`:**
@@ -174,11 +176,14 @@ Type `/` to open a command menu with 11 default commands:
 - Filter by typing after `/` (e.g., `/head`)
 - Navigate with arrow keys, select with Enter
 
-### Resizable Images
-- Insert via slash command or programmatically
+### Images
+- Insert via slash command (`/Image`) — opens a dialog with **Upload** and **Link** tabs
+- **Upload tab:** Click to select or drag a file (PNG, JPG, GIF, WebP). The consuming app provides an `onImageUpload` callback to handle server upload and return the URL. Falls back to base64 if no callback provided.
+- **Link tab:** Paste an image URL directly
 - Resize by dragging handles on left/right edges
 - Bubble menu on click: align (left/center/right), caption, download, replace, delete
 - Caption support with inline editing
+- Replace via bubble menu (re-opens the upload/link dialog)
 
 ### Tables
 - Insert via slash command (3x3 with header row)
@@ -326,6 +331,32 @@ const extraCommands = [
 ```vue
 <MeldEditor :model-value="savedContent" :editable="false" />
 ```
+
+### Image Upload
+
+```vue
+<script setup>
+async function uploadImage(file: File): Promise<string> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await fetch('/api/upload', { method: 'POST', body: formData })
+  const { url } = await res.json()
+  return url
+}
+</script>
+
+<template>
+  <MeldEditor v-model="content" :on-image-upload="uploadImage" />
+</template>
+```
+
+**How it works:**
+1. User selects Image from slash command → dialog opens with **Upload** and **Link** tabs
+2. **Upload tab:** User picks a file → `onImageUpload(file)` is called → your app uploads to server → returns URL → editor inserts `<img src="url">`
+3. **Link tab:** User pastes a URL → editor inserts directly
+4. If `onImageUpload` is not provided, file upload falls back to base64 data URL (works without a server, but not recommended for production)
+
+The same dialog also opens when clicking **Replace** in the image bubble menu.
 
 ### v-model Binding with JSON
 

@@ -60,8 +60,8 @@ export interface MeldEditorProps {
   showBubbleMenu?: boolean
   editable?: boolean
   placeholder?: string
-  maxWidth?: string
-  minHeight?: string
+  /** Custom CSS classes for the editor outer container */
+  editorClass?: string
   /** Callback to upload an image file. Should return the URL of the uploaded image. */
   onImageUpload?: (file: File) => Promise<string>
   customComponents?: CustomComponentRegistration[]

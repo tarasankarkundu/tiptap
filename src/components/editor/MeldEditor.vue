@@ -23,8 +23,7 @@ const props = withDefaults(defineProps<MeldEditorProps>(), {
     showBubbleMenu: true,
     editable: true,
     placeholder: "Type / for commands...",
-    maxWidth: "900px",
-    minHeight: "300px",
+    editorClass: "",
 });
 
 const emit = defineEmits<MeldEditorEmits>();
@@ -133,7 +132,8 @@ defineExpose<MeldEditorExposed>({
 <template>
     <div
         data-meld-editor
-        class="rounded-lg border border-border bg-background text-foreground transition-colors"
+        class="w-full h-full rounded-lg border border-border bg-background text-foreground transition-colors"
+        :class="editorClass"
     >
         <!-- Header slot (app-level action bar) -->
         <slot name="header" :editor="editor" :editable="editable" />
@@ -151,8 +151,8 @@ defineExpose<MeldEditorExposed>({
 
         <div
             ref="editorBodyRef"
-            class="relative mx-auto"
-            :style="{ maxWidth, paddingLeft: '56px', paddingRight: '16px' }"
+            class="relative w-full"
+            style="padding-left: 56px; padding-right: 16px"
             @mousemove="dragHandleRef?.handleMouseMove($event)"
             @mouseleave="dragHandleRef?.handleMouseLeave()"
         >
@@ -203,7 +203,6 @@ defineExpose<MeldEditorExposed>({
 /* ── Editor container ── */
 :deep(.tiptap) {
     padding: 1rem 1rem 1rem 0;
-    min-height: v-bind(minHeight);
     outline: none;
     font-size: 1rem;
     line-height: 1.625;

@@ -11,6 +11,9 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "@meldui/tabler-vue": "^0.1.5",
+    "@meldui/vue": "^0.1.14",
+    "@tailwindcss/vite": "^4.2.2",
     "@tiptap/core": "^3.19.0",
     "@tiptap/extension-image": "^3.19.0",
     "@tiptap/extension-placeholder": "^3.19.0",
@@ -27,6 +30,7 @@
     "@tiptap/starter-kit": "^3.19.0",
     "@tiptap/suggestion": "^3.19.0",
     "@tiptap/vue-3": "^3.19.0",
+    "tailwindcss": "^4.2.2",
     "tippy.js": "^6.3.7",
     "vue": "^3.5.27"
   },

@@ -1,0 +1,5 @@
+@import "tailwindcss";
+@import "@meldui/vue/themes/default";
+
+@source "../**/*.{vue,ts}";
+@source "../../node_modules/@meldui/vue/dist/**/*.{mjs,js}";

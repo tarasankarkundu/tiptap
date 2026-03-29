@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import { useEditor, EditorContent } from "@tiptap/vue-3";
 import { BubbleMenu } from "@tiptap/vue-3/menus";
 import TableControls from "./notion/TableControls.vue";
 import { StarterKit } from "@tiptap/starter-kit";
 import { TaskList } from "@tiptap/extension-task-list";
 import { TaskItem } from "@tiptap/extension-task-item";
-import { Image } from "@tiptap/extension-image";
+import { ResizableImage } from "./notion/ResizableImageExtension";
 import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
@@ -38,12 +38,13 @@ const editor = useEditor({
   <li>Toggle dark mode with the button in the toolbar</li>
 </ul>
 <blockquote>This is a blockquote. Try inserting different block types below!</blockquote>
+<img src="https://picsum.photos/id/28/800/400" alt="Sample landscape" />
 <p></p>`,
     extensions: [
         StarterKit,
         TaskList,
         TaskItem.configure({ nested: true }),
-        Image.configure({ inline: true, allowBase64: true }),
+        ResizableImage,
         Table.configure({ resizable: true }),
         TableRow,
         TableHeader,
@@ -301,10 +302,6 @@ function handlePlusClick() {
     }
 }
 
-onMounted(() => {
-    // nothing
-});
-
 defineExpose({ editor });
 </script>
 
@@ -410,6 +407,10 @@ defineExpose({ editor });
                 v-if="editor"
                 :editor="editor"
                 :tippy-options="{ maxWidth: 'none' }"
+                :should-show="({ editor: e }) => {
+                    if (e.isActive('image')) return false
+                    return e.state.selection.content().size > 0
+                }"
             >
                 <div class="format-bubble-menu">
                     <!-- Inline formatting -->
@@ -598,6 +599,10 @@ defineExpose({ editor });
     outline: none;
 }
 
+:deep(.tiptap .ProseMirror-selectednode) {
+    outline: none !important;
+}
+
 :deep(.tiptap p) {
     margin: 0.25em 0;
 }
@@ -723,7 +728,7 @@ defineExpose({ editor });
     top: 0;
     bottom: -2px;
     width: 4px;
-    background: #6c63ff;
+    background: var(--notion-accent);
     cursor: col-resize;
     z-index: 20;
 }
@@ -880,7 +885,7 @@ defineExpose({ editor });
 
 .format-bubble-menu button.active {
     background: var(--notion-hover, #f0f0f0);
-    color: #6c63ff;
+    color: var(--notion-accent);
 }
 
 .bubble-sep {
@@ -897,7 +902,7 @@ defineExpose({ editor });
     left: 56px;
     right: 0;
     height: 2px;
-    background: #2383e2;
+    background: var(--notion-accent);
     border-radius: 1px;
     z-index: 20;
     pointer-events: none;

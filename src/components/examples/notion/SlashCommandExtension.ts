@@ -56,6 +56,9 @@ export const SlashCommandExtension = Extension.create({
               })
               app.mount(container)
 
+              const editorWrap =
+                props.editor.view.dom.closest('.notion-editor-wrap') ??
+                document.body
               popup = tippy(props.editor.view.dom, {
                 getReferenceClientRect: props.clientRect as (() => DOMRect),
                 content: container,
@@ -63,7 +66,7 @@ export const SlashCommandExtension = Extension.create({
                 interactive: true,
                 trigger: 'manual',
                 placement: 'bottom-start',
-                appendTo: () => document.body,
+                appendTo: () => editorWrap,
               })
             },
 

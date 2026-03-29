@@ -275,9 +275,10 @@ onBeforeUnmount(() => {
                 width: col.width + 'px',
                 top: tbl.top - 20 + 'px',
             }"
+            :aria-label="`Column ${i + 1} options`"
             @click.stop="openColMenu(i, $event)"
         >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
                 <circle cx="3" cy="6" r="1.2" />
                 <circle cx="6" cy="6" r="1.2" />
                 <circle cx="9" cy="6" r="1.2" />
@@ -295,9 +296,10 @@ onBeforeUnmount(() => {
                 height: row.height + 'px',
                 left: tbl.left - 20 + 'px',
             }"
+            :aria-label="`Row ${i + 1} options`"
             @click.stop="openRowMenu(i, $event)"
         >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
                 <circle cx="6" cy="3" r="1.2" />
                 <circle cx="6" cy="6" r="1.2" />
                 <circle cx="6" cy="9" r="1.2" />
@@ -344,6 +346,7 @@ onBeforeUnmount(() => {
         <div
             v-if="menu"
             class="tc-menu"
+            role="menu"
             :style="{ top: menu.top + 'px', left: menu.left + 'px' }"
             @click.stop
         >
@@ -566,11 +569,11 @@ onBeforeUnmount(() => {
 }
 
 .tc-menu button.danger {
-    color: #e03e3e;
+    color: var(--notion-danger, #e03e3e);
 }
 
 .tc-menu button.danger:hover {
-    background: rgba(224, 62, 62, 0.08);
+    background: var(--notion-danger-hover, rgba(224, 62, 62, 0.08));
 }
 
 .tc-mi {
@@ -580,7 +583,7 @@ onBeforeUnmount(() => {
 }
 
 .tc-menu button.danger .tc-mi {
-    stroke: #e03e3e;
+    stroke: var(--notion-danger, #e03e3e);
 }
 
 .tc-sep {

@@ -9,6 +9,9 @@
   --notion-selection: #d3e5ef;
   --notion-drag-handle: #c4c4c2;
   --notion-slash-bg: #ffffff;
+  --notion-accent: #6c63ff;
+  --notion-danger: #e03e3e;
+  --notion-danger-hover: rgba(224, 62, 62, 0.08);
   --notion-slash-shadow: 0 1px 6px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
 }
 
@@ -23,5 +26,8 @@
   --notion-selection: #2d4a5e;
   --notion-drag-handle: #5a5a5a;
   --notion-slash-bg: #252525;
+  --notion-accent: #7c73ff;
+  --notion-danger: #ff6b6b;
+  --notion-danger-hover: rgba(255, 107, 107, 0.1);
   --notion-slash-shadow: 0 1px 6px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06);
 }

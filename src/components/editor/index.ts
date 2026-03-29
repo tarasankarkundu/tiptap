@@ -10,4 +10,5 @@ export type {
   MeldEditorExposed,
   DefaultExtensionOptions,
   CustomComponentRegistration,
+  MentionItem,
 } from './types'

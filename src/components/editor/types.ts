@@ -1,6 +1,12 @@
 import type { Component } from 'vue'
 import type { Editor, Extension, Mark, Node as TiptapNode } from '@tiptap/core'
 
+// --- Mention Item ---
+export interface MentionItem {
+  id: string
+  label: string
+}
+
 // --- Slash Command Item ---
 export interface SlashCommandItem {
   title: string
@@ -44,6 +50,7 @@ export interface DefaultExtensionOptions {
   textAlign?: boolean | Record<string, unknown>
   placeholder?: boolean | string
   slashCommands?: boolean
+  mention?: boolean
 }
 
 // --- Editor Props ---
@@ -64,6 +71,8 @@ export interface MeldEditorProps {
   editorClass?: string
   /** Callback to upload an image file. Should return the URL of the uploaded image. */
   onImageUpload?: (file: File) => Promise<string>
+  /** Async callback to search mentionable items. Mention extension only loads when provided. */
+  onMentionSearch?: (query: string) => Promise<MentionItem[]>
   customComponents?: CustomComponentRegistration[]
 }
 

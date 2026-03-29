@@ -111,6 +111,8 @@ const content = ref('<p>Hello world</p>')
 | `minHeight` | `string` | `'300px'` | CSS min-height for the editor |
 | **Image upload** |||
 | `onImageUpload` | `(file: File) => Promise<string>` | — | Callback to upload image file. Returns the URL of the uploaded image. |
+| **Mention** |||
+| `onMentionSearch` | `(query: string) => Promise<MentionItem[]>` | — | Async callback to search mentionable items. Mention extension only loads when this is provided. |
 | `customComponents` | `CustomComponentRegistration[]` | — | Register custom block types (Phase 2) |
 
 **`DefaultExtensionOptions`:**
@@ -122,6 +124,7 @@ const content = ref('<p>Hello world</p>')
   textAlign?: boolean | object   // default: true
   placeholder?: boolean | string // default: true. string sets placeholder text
   slashCommands?: boolean        // default: true
+  mention?: boolean              // default: true (only active when onMentionSearch is provided)
 }
 ```
 
@@ -191,6 +194,16 @@ Type `/` to open a command menu with 11 default commands:
 - Row/column handles on hover
 - Context menu: insert row/column, delete row/column, delete table
 
+### Mentions
+- Type `@` inline to trigger the mention popup
+- Async search — the consuming app provides an `onMentionSearch` callback that fetches matching users/teams
+- Popup shows loading spinner while searching, empty state when no results
+- Keyboard navigation (arrow keys + Enter) and mouse selection
+- Mentions render as styled inline chips: `@John Doe`
+- Also available via `/Mention` slash command (inserts `@` to trigger the popup)
+- Mention extension only loads when `onMentionSearch` prop is provided
+- **Data model:** Each mention stores `{ id, label }` — the consuming app resolves additional details from the id
+
 ### Block Drag-and-Drop
 - Hover over any block to see the drag handle (grip icon + plus button)
 - Drag blocks to reorder
@@ -227,6 +240,39 @@ import { Highlight } from '@tiptap/extension-highlight'
   <MeldEditor v-model="content" :extra-extensions="[Highlight]" />
 </template>
 ```
+
+### Mentions
+
+```vue
+<script setup>
+async function searchUsers(query: string) {
+  const res = await fetch(`/api/users?q=${encodeURIComponent(query)}`)
+  const users = await res.json()
+  return users.map(u => ({ id: u.id, label: u.name }))
+}
+</script>
+
+<template>
+  <MeldEditor v-model="content" :on-mention-search="searchUsers" />
+</template>
+```
+
+**How it works:**
+1. User types `@` anywhere in the editor → mention popup appears
+2. User types a query (e.g. `@ali`) → `onMentionSearch('ali')` is called → popup shows loading spinner
+3. Callback resolves → filtered results displayed
+4. User selects with arrow keys + Enter or mouse click → mention inserted as inline chip
+5. Mention serializes in JSON as `{ type: "mention", attrs: { id: "user-123", label: "Alice" } }`
+
+**`MentionItem` type:**
+```ts
+interface MentionItem {
+  id: string    // Unique identifier (e.g. user ID)
+  label: string // Display name
+}
+```
+
+**Without `onMentionSearch`:** The mention extension is not loaded — no `@` trigger, no mention in slash commands.
 
 ### Disable Specific Slash Commands
 
@@ -667,6 +713,20 @@ const json = editorRef.value.getJSON()
         { "type": "text", "text": " text." }
       ]
     }
+  ]
+}
+```
+
+### Mention (inline)
+
+A mention inside a paragraph:
+```json
+{
+  "type": "paragraph",
+  "content": [
+    { "type": "text", "text": "Hey " },
+    { "type": "mention", "attrs": { "id": "user-123", "label": "John Doe" } },
+    { "type": "text", "text": " can you review this?" }
   ]
 }
 ```

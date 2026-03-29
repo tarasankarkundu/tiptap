@@ -70,6 +70,7 @@ const resolvedExtensions = computed(() => {
         placeholder: props.placeholder,
         slashCommands: resolvedSlashCommands.value,
         onRequestImageUrl: (cb) => openImageDialog(cb),
+        onMentionSearch: props.onMentionSearch,
     });
     return props.extraExtensions
         ? [...defaults, ...props.extraExtensions]
@@ -424,5 +425,16 @@ defineExpose<MeldEditorExposed>({
     color: var(--muted-foreground);
     pointer-events: none;
     height: 0;
+}
+
+/* ── Mentions ── */
+:deep(.tiptap .mention) {
+    background: var(--accent);
+    color: var(--accent-foreground);
+    border-radius: 0.25rem;
+    padding: 0.125rem 0.375rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
 }
 </style>

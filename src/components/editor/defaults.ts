@@ -1,5 +1,5 @@
 import type { Extension, Mark, Node as TiptapNode } from '@tiptap/core'
-import type { ToolbarItem, SlashCommandItem, DefaultExtensionOptions } from './types'
+import type { ToolbarItem, SlashCommandItem, DefaultExtensionOptions, MentionItem } from './types'
 import { StarterKit } from '@tiptap/starter-kit'
 import { TaskList } from '@tiptap/extension-task-list'
 import { TaskItem } from '@tiptap/extension-task-item'
@@ -12,6 +12,7 @@ import { Placeholder } from '@tiptap/extension-placeholder'
 import { TableOfContents } from '@tiptap/extension-table-of-contents'
 import { ResizableImage } from './image/ResizableImageExtension'
 import { TocNode } from './toc/TocExtension'
+import { createMentionExtension } from './mention/MentionExtension'
 import { createSlashCommandExtension } from './slash-commands/SlashCommandExtension'
 import { defaultSlashCommands } from './slash-commands/defaultSlashCommands'
 import {
@@ -24,6 +25,7 @@ export function createDefaultExtensions(options: {
   placeholder?: string
   slashCommands?: SlashCommandItem[]
   onRequestImageUrl?: (callback: (url: string) => void) => void
+  onMentionSearch?: (query: string) => Promise<MentionItem[]>
 }): (Extension | Mark | TiptapNode)[] {
   const d = options.defaults ?? {}
   const exts: (Extension | Mark | TiptapNode)[] = [StarterKit]
@@ -75,6 +77,10 @@ export function createDefaultExtensions(options: {
 
   if (d.slashCommands !== false && options.slashCommands) {
     exts.push(createSlashCommandExtension(options.slashCommands))
+  }
+
+  if (d.mention !== false && options.onMentionSearch) {
+    exts.push(createMentionExtension(options.onMentionSearch))
   }
 
   return exts

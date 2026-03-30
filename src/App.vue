@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
 import type { MentionItem } from "@/components/editor";
-import { MeldEditor, useThemeMode } from "@/components/editor";
+import { MeldEditor, useThemeMode, chartNodeRegistration } from "@/components/editor";
 import { Button } from "@meldui/vue";
 import { IconSun, IconMoon } from "@meldui/tabler-vue";
 
@@ -54,7 +54,11 @@ async function searchMentions(query: string): Promise<MentionItem[]> {
                     <IconMoon v-else :size="18" />
                 </Button>
             </div>
-            <MeldEditor v-model="content" :on-mention-search="searchMentions" />
+            <MeldEditor
+                v-model="content"
+                :on-mention-search="searchMentions"
+                :custom-components="[chartNodeRegistration]"
+            />
         </div>
     </div>
 </template>

@@ -45,7 +45,7 @@ function alignItems(editor: Editor): BubbleItem[] {
     :editor="editor"
     :tippy-options="{ maxWidth: 'none', zIndex: 50 }"
     :should-show="({ editor: e }) => {
-      if (e.isActive('image') || e.isActive('tableOfContentsNode')) return false
+      if (e.isActive('image') || e.isActive('tableOfContentsNode') || e.isActive('meldChart')) return false
       return e.state.selection.content().size > 0
     }"
   >

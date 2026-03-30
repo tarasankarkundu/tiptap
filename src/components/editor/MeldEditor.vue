@@ -16,6 +16,8 @@ import TextBubbleMenu from "./bubble-menu/TextBubbleMenu.vue";
 import TableControls from "./table/TableControls.vue";
 import DragHandle from "./drag-handle/DragHandle.vue";
 import ImageUrlDialog from "./image/ImageUrlDialog.vue";
+import { createCustomNodeExtension } from "./custom-components/CustomNodeExtension";
+import type { SlashCommandItem } from "./types";
 
 const props = withDefaults(defineProps<MeldEditorProps>(), {
     modelValue: "",
@@ -47,15 +49,43 @@ function onImageDialogSubmit(url: string) {
     imageDialogOpen.value = false;
 }
 
+// Custom component extensions and slash commands (Phase 2)
+const customExtensions = computed(() =>
+    (props.customComponents ?? []).map((reg) => createCustomNodeExtension(reg)),
+);
+
+const customSlashCommands = computed<SlashCommandItem[]>(() =>
+    (props.customComponents ?? [])
+        .filter((reg) => reg.slashCommand)
+        .map((reg) => ({
+            title: reg.slashCommand!.title,
+            description: reg.slashCommand!.description,
+            icon: reg.slashCommand!.icon,
+            category: reg.slashCommand!.category,
+            keywords: reg.slashCommand!.keywords,
+            command: (editor: Parameters<SlashCommandItem["command"]>[0]) => {
+                editor
+                    .chain()
+                    .focus()
+                    .insertContent({
+                        type: reg.name,
+                        attrs: reg.slashCommand!.defaultAttrs ?? {},
+                    })
+                    .run();
+            },
+        })),
+);
+
 // Resolve slash commands
-const resolvedSlashCommands = computed(() =>
-    resolveSlashCommands({
+const resolvedSlashCommands = computed(() => {
+    const base = resolveSlashCommands({
         override: props.overrideSlashCommands,
         extra: props.extraSlashCommands,
         disable: props.disableSlashCommands,
         onImageInsert: () => openImageDialog(),
-    }),
-);
+    });
+    return [...base, ...customSlashCommands.value];
+});
 
 // Resolve toolbar items
 const resolvedToolbarItems = computed(
@@ -64,7 +94,8 @@ const resolvedToolbarItems = computed(
 
 // Resolve extensions
 const resolvedExtensions = computed(() => {
-    if (props.overrideExtensions) return props.overrideExtensions;
+    if (props.overrideExtensions)
+        return [...props.overrideExtensions, ...customExtensions.value];
     const defaults = createDefaultExtensions({
         defaults: props.defaultExtensions,
         placeholder: props.placeholder,
@@ -72,9 +103,8 @@ const resolvedExtensions = computed(() => {
         onRequestImageUrl: (cb) => openImageDialog(cb),
         onMentionSearch: props.onMentionSearch,
     });
-    return props.extraExtensions
-        ? [...defaults, ...props.extraExtensions]
-        : defaults;
+    const extra = props.extraExtensions ?? [];
+    return [...defaults, ...extra, ...customExtensions.value];
 });
 
 // Create editor

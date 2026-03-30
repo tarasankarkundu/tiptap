@@ -35,6 +35,7 @@ pnpm add @tiptap/extension-table @tiptap/extension-table-row
 pnpm add @tiptap/extension-table-header @tiptap/extension-table-cell
 pnpm add @tiptap/extension-task-list @tiptap/extension-task-item
 pnpm add @tiptap/extension-text-align @tiptap/suggestion tippy.js
+pnpm add @tiptap/extension-table-of-contents @tiptap/extension-mention
 ```
 
 For charts (Phase 2):
@@ -107,8 +108,7 @@ const content = ref('<p>Hello world</p>')
 | `showBubbleMenu` | `boolean` | `true` | Show/hide text formatting bubble menu |
 | `editable` | `boolean` | `true` | Enable/disable editing (read-only / view mode) |
 | `placeholder` | `string` | `'Type / for commands...'` | Placeholder text for empty editor |
-| `maxWidth` | `string` | `'900px'` | CSS max-width for the content area |
-| `minHeight` | `string` | `'300px'` | CSS min-height for the editor |
+| `editorClass` | `string` | `''` | Custom CSS classes for the editor outer container |
 | **Image upload** |||
 | `onImageUpload` | `(file: File) => Promise<string>` | — | Callback to upload image file. Returns the URL of the uploaded image. |
 | **Mention** |||
@@ -173,11 +173,14 @@ Out of the box, MeldEditor includes:
 - Text alignment (left, center, right, justify)
 
 ### Slash Commands
-Type `/` to open a command menu with 11 default commands:
-- Heading 1/2/3, Bullet List, Ordered List, Task List
-- Blockquote, Code Block, Horizontal Rule, Table, Image
+Type `/` to open a command menu with 15 default commands:
+- Text, Heading 1/2/3
+- Bullet List, Ordered List, Task List
+- Blockquote, Code Block, Horizontal Rule
+- Table of Contents, Table, Mention, Image
 - Filter by typing after `/` (e.g., `/head`)
 - Navigate with arrow keys, select with Enter
+- Scrollable list with styled scrollbar (MeldUI ScrollArea)
 
 ### Images
 - Insert via slash command (`/Image`) — opens a dialog with **Upload** and **Link** tabs
@@ -187,6 +190,14 @@ Type `/` to open a command menu with 11 default commands:
 - Bubble menu on click: align (left/center/right), caption, download, replace, delete
 - Caption support with inline editing
 - Replace via bubble menu (re-opens the upload/link dialog)
+
+### Table of Contents
+- Insert via `/Table of Contents` slash command
+- Auto-generated from document headings (H1, H2, H3)
+- Clickable entries scroll to the corresponding heading
+- Updates live as headings are added, removed, or edited
+- Renders as a styled block with indentation by heading level
+- Shows "No headings found" when the document has no headings
 
 ### Tables
 - Insert via slash command (3x3 with header row)
@@ -458,7 +469,9 @@ MeldEditor assembles defaults via `createDefaultExtensions()`:
 - `Table` + `TableRow` + `TableHeader` + `TableCell` (resizable tables) — disable: `{ table: false }`
 - `TextAlign` (paragraph and heading alignment) — disable: `{ textAlign: false }`
 - `Placeholder` (configurable placeholder text) — disable: `{ placeholder: false }`
+- `TableOfContents` + `TocNode` (auto-generated heading navigation) — always included
 - `SlashCommandExtension` (configurable slash commands) — disable: `{ slashCommands: false }`
+- `Mention` (inline @mentions with async search) — disable: `{ mention: false }`. Only active when `onMentionSearch` prop is provided.
 
 ### Overriding ALL Extensions (escape hatch)
 
@@ -731,6 +744,16 @@ A mention inside a paragraph:
 }
 ```
 
+### Table of Contents Node
+
+```json
+{
+  "type": "tableOfContentsNode"
+}
+```
+
+An atom node with no attributes. It auto-generates its content from the document's headings at render time. Clicking a heading entry scrolls to it.
+
 ### Image Node
 
 ```json
@@ -815,7 +838,7 @@ editorRef.value.setContent(JSON.parse(saved.content))
 | `window.prompt` for image URL | MeldUI Dialog component |
 | Inline SVG icons | `@meldui/tabler-vue` icons |
 | No events | `update:modelValue`, `update:json`, `created`, `focus`, `blur` |
-| No slots | `toolbar`, `bubble-menu`, `before-content`, `after-content` |
+| No slots | `header`, `toolbar`, `bubble-menu`, `before-content`, `after-content` |
 | `defineExpose({ editor })` | `editor`, `getHTML()`, `getJSON()`, `setContent()`, `focus()`, `blur()` |
 | `import './notion-dark-mode.css'` | Handled by MeldUI theme (no import needed) |
 
@@ -831,3 +854,5 @@ editorRef.value.setContent(JSON.parse(saved.content))
 - `@meldui/vue` — UI component library
 - `@meldui/tabler-vue` — Icon library
 - `tailwindcss` + `@tailwindcss/vite` — CSS framework (required by MeldUI)
+- `@tiptap/extension-table-of-contents` — Table of Contents extension
+- `@tiptap/extension-mention` — Mention extension

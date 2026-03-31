@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, nextTick } from "vue";
 import type { SlashCommandItem } from "../types";
 import { ScrollArea, ScrollBar } from "@meldui/vue";
 
@@ -9,6 +9,7 @@ const props = defineProps<{
 }>();
 
 const selectedIndex = ref(0);
+const itemRefs = ref<HTMLElement[]>([]);
 
 watch(
     () => props.items,
@@ -16,6 +17,12 @@ watch(
         selectedIndex.value = 0;
     },
 );
+
+watch(selectedIndex, () => {
+    nextTick(() => {
+        itemRefs.value[selectedIndex.value]?.scrollIntoView({ block: "nearest" });
+    });
+});
 
 function selectItem(index: number) {
     const item = props.items[index];
@@ -52,6 +59,7 @@ defineExpose({ onKeyDown });
                 <button
                     v-for="(item, index) in items"
                     :key="item.title"
+                    :ref="(el) => { if (el) itemRefs[index] = el as HTMLElement }"
                     class="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-popover-foreground transition-colors"
                     :class="
                         index === selectedIndex

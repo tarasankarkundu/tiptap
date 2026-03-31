@@ -9,133 +9,113 @@ import { Button } from '@meldui/vue'
 import { Input } from '@meldui/vue'
 import { Separator } from '@meldui/vue'
 import {
-  IconChartBar, IconChartLine, IconChartPie, IconChartArea,
+  IconChartBar, IconChartLine, IconChartArea,
+  IconChartPie, IconChartDonut,
   IconPlus, IconX,
 } from '@meldui/tabler-vue'
 
-interface SeriesData {
-  name: string
-  data: number[]
-}
+// --- Types ---
+interface SeriesData { name: string; data: number[] }
+interface SliceData { name: string; value: number }
+
+type ChartCategory = 'series' | 'slice'
 
 const props = defineProps<{
   open: boolean
   chartType: string
   config: Record<string, unknown>
+  title?: string
 }>()
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  'update': [config: Record<string, unknown>, type: string]
+  'update': [config: Record<string, unknown>, type: string, title: string]
 }>()
 
+// --- State ---
+const category = computed<ChartCategory>(() =>
+  props.chartType === 'pie' || props.chartType === 'donut' ? 'slice' : 'series',
+)
+
 const selectedType = ref(props.chartType)
-const categories = ref<string[]>([])
+const chartTitle = ref(props.title ?? '')
+
+// Series chart state
 const series = ref<SeriesData[]>([])
-const pieLabels = ref<string[]>([])
+const categories = ref<string[]>([])
 
-const isPieType = computed(() => selectedType.value === 'pie' || selectedType.value === 'donut')
+// Slice chart state
+const slices = ref<SliceData[]>([])
 
-const chartTypes = [
+const seriesTypes = [
   { type: 'bar', icon: IconChartBar, label: 'Bar' },
   { type: 'line', icon: IconChartLine, label: 'Line' },
   { type: 'area', icon: IconChartArea, label: 'Area' },
-  { type: 'pie', icon: IconChartPie, label: 'Pie' },
 ]
 
-// Parse existing config into editable state
-function parseConfig(config: Record<string, unknown>) {
-  const rawSeries = (config.series ?? []) as Array<{ name: string; data: number[] }>
-  const rawCategories = ((config.xAxis as Record<string, unknown>)?.categories ?? []) as string[]
-  const rawLabels = (config.labels ?? []) as string[]
+const sliceTypes = [
+  { type: 'pie', icon: IconChartPie, label: 'Pie' },
+  { type: 'donut', icon: IconChartDonut, label: 'Donut' },
+]
 
-  series.value = rawSeries.map(s => ({ name: s.name, data: [...s.data] }))
-  categories.value = [...rawCategories]
-  pieLabels.value = [...rawLabels]
-
-  // Ensure at least one series with one data point
-  if (series.value.length === 0) {
-    series.value = [{ name: 'Series 1', data: [0] }]
-  }
-  if (categories.value.length === 0 && !isPieType.value) {
-    categories.value = ['Item 1']
-  }
-  if (pieLabels.value.length === 0 && isPieType.value) {
-    pieLabels.value = series.value[0]?.data.map((_, i) => `Slice ${i + 1}`) ?? ['Slice 1']
-  }
-}
-
+// --- Parse config on open ---
 watch(() => props.open, (val) => {
-  if (val) {
-    selectedType.value = props.chartType
-    parseConfig(props.config)
-  }
-})
+  if (!val) return
+  selectedType.value = props.chartType
+  chartTitle.value = props.title ?? ''
+  const rawSeries = (props.config.series ?? []) as Array<{ name: string; data: number[] }>
+  const rawCategories = ((props.config.xAxis as Record<string, unknown>)?.categories ?? []) as string[]
 
-// When switching types, adapt data
-watch(selectedType, (newType, oldType) => {
-  if (isPieType.value && pieLabels.value.length === 0) {
-    pieLabels.value = categories.value.length > 0
-      ? [...categories.value]
-      : series.value[0]?.data.map((_, i) => `Slice ${i + 1}`) ?? ['Slice 1']
-    // Keep only first series for pie
-    if (series.value.length > 1) {
-      series.value = [series.value[0]!]
+  if (category.value === 'slice') {
+    slices.value = rawSeries.map(s => ({ name: s.name, value: s.data[0] ?? 0 }))
+    if (slices.value.length === 0) {
+      slices.value = [{ name: 'Slice 1', value: 35 }, { name: 'Slice 2', value: 25 }, { name: 'Slice 3', value: 20 }]
     }
-  }
-  if (!isPieType.value && categories.value.length === 0) {
-    categories.value = pieLabels.value.length > 0
-      ? [...pieLabels.value]
-      : series.value[0]?.data.map((_, i) => `Item ${i + 1}`) ?? ['Item 1']
+  } else {
+    series.value = rawSeries.map(s => ({ name: s.name, data: [...s.data] }))
+    categories.value = [...rawCategories]
+    if (series.value.length === 0) series.value = [{ name: 'Series 1', data: [0] }]
+    if (categories.value.length === 0) categories.value = ['Item 1']
   }
 })
 
-// --- Category / Label management ---
+// --- Series chart: category management ---
 function addCategory() {
-  const idx = categories.value.length + 1
-  categories.value.push(`Item ${idx}`)
+  categories.value.push(`Item ${categories.value.length + 1}`)
   series.value.forEach(s => s.data.push(0))
 }
-
 function removeCategory(i: number) {
   if (categories.value.length <= 1) return
   categories.value.splice(i, 1)
   series.value.forEach(s => s.data.splice(i, 1))
 }
-
-function addPieSlice() {
-  pieLabels.value.push(`Slice ${pieLabels.value.length + 1}`)
-  series.value[0]?.data.push(0)
-}
-
-function removePieSlice(i: number) {
-  if (pieLabels.value.length <= 1) return
-  pieLabels.value.splice(i, 1)
-  series.value[0]?.data.splice(i, 1)
-}
-
-// --- Series management ---
 function addSeries() {
-  const count = categories.value.length || series.value[0]?.data.length || 1
-  series.value.push({ name: `Series ${series.value.length + 1}`, data: Array(count).fill(0) })
+  series.value.push({ name: `Series ${series.value.length + 1}`, data: Array(categories.value.length).fill(0) })
 }
-
 function removeSeries(i: number) {
   if (series.value.length <= 1) return
   series.value.splice(i, 1)
 }
 
+// --- Slice chart: slice management ---
+function addSlice() {
+  slices.value.push({ name: `Slice ${slices.value.length + 1}`, value: 10 })
+}
+function removeSlice(i: number) {
+  if (slices.value.length <= 1) return
+  slices.value.splice(i, 1)
+}
+
 // --- Apply ---
 function apply() {
-  const config: Record<string, unknown> = {
-    series: series.value.map(s => ({ name: s.name, data: [...s.data] })),
-  }
-  if (isPieType.value) {
-    config.labels = [...pieLabels.value]
+  const config: Record<string, unknown> = {}
+  if (category.value === 'slice') {
+    config.series = slices.value.map(s => ({ name: s.name, data: [s.value] }))
   } else {
+    config.series = series.value.map(s => ({ name: s.name, data: [...s.data] }))
     config.xAxis = { categories: [...categories.value] }
   }
-  emit('update', config, selectedType.value)
+  emit('update', config, selectedType.value, chartTitle.value)
 }
 </script>
 
@@ -144,48 +124,74 @@ function apply() {
     <DialogContent class="sm:max-w-lg max-h-[85vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle>Configure Chart</DialogTitle>
-        <DialogDescription>Choose a type and edit your data.</DialogDescription>
+        <DialogDescription>
+          {{ category === 'series' ? 'Edit your series chart data.' : 'Edit your slice chart data.' }}
+        </DialogDescription>
       </DialogHeader>
 
-      <!-- Chart type selector -->
-      <div class="grid grid-cols-4 gap-2">
+      <!-- Title (optional) -->
+      <Input
+        v-model="chartTitle"
+        placeholder="Chart title (optional)"
+        class="text-sm"
+      />
+
+      <!-- Type switcher (within same category only) -->
+      <div class="flex gap-2">
         <button
-          v-for="ct in chartTypes"
+          v-for="ct in (category === 'slice' ? sliceTypes : seriesTypes)"
           :key="ct.type"
-          class="flex flex-col items-center gap-1.5 rounded-lg border p-3 cursor-pointer transition-colors"
+          class="flex flex-1 items-center justify-center gap-2 rounded-lg border p-2.5 cursor-pointer transition-colors"
           :class="selectedType === ct.type
             ? 'border-primary bg-primary/10 text-primary'
             : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'"
           @click="selectedType = ct.type"
         >
-          <component :is="ct.icon" :size="24" />
-          <span class="text-xs font-medium">{{ ct.label }}</span>
+          <component :is="ct.icon" :size="20" />
+          <span class="text-sm font-medium">{{ ct.label }}</span>
         </button>
       </div>
 
       <Separator />
 
-      <!-- Data editor -->
-      <Tabs default-value="data">
+      <!-- Slice chart editor (pie/donut) -->
+      <div v-if="category === 'slice'" class="space-y-3">
+        <div v-for="(slice, i) in slices" :key="i" class="flex items-center gap-2">
+          <Input v-model="slice.name" placeholder="Label" class="flex-1 text-sm" />
+          <Input
+            :model-value="String(slice.value)"
+            type="number"
+            class="w-24 text-sm"
+            @update:model-value="(v: string | number) => slice.value = Number(v) || 0"
+          />
+          <Button
+            v-if="slices.length > 1"
+            variant="ghost" size="icon-sm"
+            class="shrink-0 text-destructive hover:bg-destructive/10"
+            @click="removeSlice(i)"
+          >
+            <IconX :size="14" />
+          </Button>
+        </div>
+        <Button variant="outline" size="sm" class="w-full" @click="addSlice">
+          <IconPlus :size="14" class="mr-1" /> Add Slice
+        </Button>
+      </div>
+
+      <!-- Series chart editor (bar/line/area) -->
+      <Tabs v-else default-value="data">
         <TabsList class="w-full">
           <TabsTrigger value="data" class="flex-1">Data</TabsTrigger>
-          <TabsTrigger v-if="!isPieType" value="categories" class="flex-1">Categories</TabsTrigger>
-          <TabsTrigger v-if="isPieType" value="labels" class="flex-1">Labels</TabsTrigger>
+          <TabsTrigger value="categories" class="flex-1">Categories</TabsTrigger>
         </TabsList>
 
-        <!-- Series data tab -->
         <TabsContent value="data" class="mt-3 space-y-4">
           <div v-for="(s, si) in series" :key="si" class="space-y-2">
             <div class="flex items-center gap-2">
-              <Input
-                v-model="s.name"
-                placeholder="Series name"
-                class="flex-1 text-sm"
-              />
+              <Input v-model="s.name" placeholder="Series name" class="flex-1 text-sm" />
               <Button
-                v-if="!isPieType && series.length > 1"
-                variant="ghost"
-                size="icon-sm"
+                v-if="series.length > 1"
+                variant="ghost" size="icon-sm"
                 class="shrink-0 text-destructive hover:bg-destructive/10"
                 @click="removeSeries(si)"
               >
@@ -194,9 +200,7 @@ function apply() {
             </div>
             <div class="grid grid-cols-3 gap-1.5">
               <div v-for="(_, di) in s.data" :key="di" class="flex items-center gap-1">
-                <span class="text-xs text-muted-foreground w-6 shrink-0 text-right">
-                  {{ isPieType ? (pieLabels[di] ?? di + 1) : (categories[di] ?? di + 1) }}
-                </span>
+                <span class="text-xs text-muted-foreground w-8 shrink-0 text-right truncate">{{ categories[di] ?? di + 1 }}</span>
                 <Input
                   :model-value="String(s.data[di])"
                   type="number"
@@ -206,29 +210,17 @@ function apply() {
               </div>
             </div>
           </div>
-          <Button
-            v-if="!isPieType"
-            variant="outline"
-            size="sm"
-            class="w-full"
-            @click="addSeries"
-          >
+          <Button variant="outline" size="sm" class="w-full" @click="addSeries">
             <IconPlus :size="14" class="mr-1" /> Add Series
           </Button>
         </TabsContent>
 
-        <!-- Categories tab (bar/line/area) -->
-        <TabsContent v-if="!isPieType" value="categories" class="mt-3 space-y-2">
+        <TabsContent value="categories" class="mt-3 space-y-2">
           <div v-for="(_, i) in categories" :key="i" class="flex items-center gap-2">
-            <Input
-              v-model="categories[i]"
-              placeholder="Category name"
-              class="flex-1 text-sm"
-            />
+            <Input v-model="categories[i]" placeholder="Category name" class="flex-1 text-sm" />
             <Button
               v-if="categories.length > 1"
-              variant="ghost"
-              size="icon-sm"
+              variant="ghost" size="icon-sm"
               class="shrink-0 text-destructive hover:bg-destructive/10"
               @click="removeCategory(i)"
             >
@@ -237,29 +229,6 @@ function apply() {
           </div>
           <Button variant="outline" size="sm" class="w-full" @click="addCategory">
             <IconPlus :size="14" class="mr-1" /> Add Category
-          </Button>
-        </TabsContent>
-
-        <!-- Labels tab (pie) -->
-        <TabsContent v-if="isPieType" value="labels" class="mt-3 space-y-2">
-          <div v-for="(_, i) in pieLabels" :key="i" class="flex items-center gap-2">
-            <Input
-              v-model="pieLabels[i]"
-              placeholder="Label"
-              class="flex-1 text-sm"
-            />
-            <Button
-              v-if="pieLabels.length > 1"
-              variant="ghost"
-              size="icon-sm"
-              class="shrink-0 text-destructive hover:bg-destructive/10"
-              @click="removePieSlice(i)"
-            >
-              <IconX :size="14" />
-            </Button>
-          </div>
-          <Button variant="outline" size="sm" class="w-full" @click="addPieSlice">
-            <IconPlus :size="14" class="mr-1" /> Add Slice
           </Button>
         </TabsContent>
       </Tabs>

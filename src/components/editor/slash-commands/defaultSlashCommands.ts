@@ -3,7 +3,7 @@ import type { SlashCommandItem } from '../types'
 import {
   IconLetterT, IconH1, IconH2, IconH3, IconList, IconListNumbers,
   IconListCheck, IconBlockquote, IconCode, IconSeparator,
-  IconTable, IconPhoto, IconListTree, IconAt,
+  IconTable, IconPhoto, IconListTree, IconAt, IconChartBar,
 } from '@meldui/tabler-vue'
 
 export function defaultSlashCommands(
@@ -116,6 +116,15 @@ export function defaultSlashCommands(
       keywords: ['grid'],
       command: (editor: Editor) => {
         editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+      },
+    },
+    {
+      title: 'Chart',
+      description: 'Insert a data chart',
+      icon: IconChartBar,
+      keywords: ['chart', 'graph', 'bar', 'line', 'pie', 'data'],
+      command: (editor: Editor) => {
+        editor.chain().focus().insertContent({ type: 'meldChart' }).run()
       },
     },
     {

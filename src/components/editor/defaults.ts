@@ -12,6 +12,7 @@ import { Placeholder } from '@tiptap/extension-placeholder'
 import { TableOfContents } from '@tiptap/extension-table-of-contents'
 import { ResizableImage } from './image/ResizableImageExtension'
 import { TocNode } from './toc/TocExtension'
+import { ChartNode } from './chart/ChartNodeExtension'
 import { createMentionExtension } from './mention/MentionExtension'
 import { createSlashCommandExtension } from './slash-commands/SlashCommandExtension'
 import { defaultSlashCommands } from './slash-commands/defaultSlashCommands'
@@ -58,6 +59,10 @@ export function createDefaultExtensions(options: {
 
   // Table of Contents (always included — the node view + heading tracker)
   exts.push(TableOfContents, TocNode)
+
+  if (d.chart !== false) {
+    exts.push(ChartNode)
+  }
 
   if (d.textAlign !== false) {
     exts.push(

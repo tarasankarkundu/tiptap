@@ -51,6 +51,7 @@ export interface DefaultExtensionOptions {
   placeholder?: boolean | string
   slashCommands?: boolean
   mention?: boolean
+  chart?: boolean
 }
 
 // --- Editor Props ---

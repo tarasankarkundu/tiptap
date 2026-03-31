@@ -4,6 +4,7 @@ import {
   IconLetterT, IconH1, IconH2, IconH3, IconList, IconListNumbers,
   IconListCheck, IconBlockquote, IconCode, IconSeparator,
   IconTable, IconPhoto, IconListTree, IconAt, IconChartBar,
+  IconColumns2, IconColumns3,
 } from '@meldui/tabler-vue'
 
 export function defaultSlashCommands(
@@ -116,6 +117,24 @@ export function defaultSlashCommands(
       keywords: ['grid'],
       command: (editor: Editor) => {
         editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+      },
+    },
+    {
+      title: '2 Columns',
+      description: 'Split into 2 columns',
+      icon: IconColumns2,
+      keywords: ['column', 'split', 'layout', 'two'],
+      command: (editor: Editor) => {
+        editor.commands.setColumns(2)
+      },
+    },
+    {
+      title: '3 Columns',
+      description: 'Split into 3 columns',
+      icon: IconColumns3,
+      keywords: ['column', 'split', 'layout', 'three'],
+      command: (editor: Editor) => {
+        editor.commands.setColumns(3)
       },
     },
     {

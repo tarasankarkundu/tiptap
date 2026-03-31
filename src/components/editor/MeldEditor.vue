@@ -467,4 +467,24 @@ defineExpose<MeldEditorExposed>({
     cursor: pointer;
     white-space: nowrap;
 }
+
+/* ── Columns ── */
+:deep(.column-content) {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 1rem;
+}
+
+:deep(.column) {
+    min-width: 0;
+    border: 1px solid transparent;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    transition: border-color 0.15s;
+}
+
+:deep(.column:hover) {
+    border-color: var(--border);
+}
 </style>

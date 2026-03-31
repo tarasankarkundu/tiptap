@@ -13,6 +13,8 @@ import { TableOfContents } from '@tiptap/extension-table-of-contents'
 import { ResizableImage } from './image/ResizableImageExtension'
 import { TocNode } from './toc/TocExtension'
 import { ChartNode } from './chart/ChartNodeExtension'
+import { ColumnExtension } from './columns/ColumnExtension'
+import { ColumnBlockExtension } from './columns/ColumnBlockExtension'
 import { createMentionExtension } from './mention/MentionExtension'
 import { createSlashCommandExtension } from './slash-commands/SlashCommandExtension'
 import { defaultSlashCommands } from './slash-commands/defaultSlashCommands'
@@ -64,6 +66,10 @@ export function createDefaultExtensions(options: {
     exts.push(ChartNode)
   }
 
+  if (d.columns !== false) {
+    exts.push(ColumnExtension, ColumnBlockExtension)
+  }
+
   if (d.textAlign !== false) {
     exts.push(
       typeof d.textAlign === 'object'
@@ -77,7 +83,10 @@ export function createDefaultExtensions(options: {
       typeof d.placeholder === 'string'
         ? d.placeholder
         : options.placeholder ?? 'Type / for commands...'
-    exts.push(Placeholder.configure({ placeholder: text }))
+    exts.push(Placeholder.configure({
+      placeholder: text,
+      includeChildren: true,
+    }))
   }
 
   if (d.slashCommands !== false && options.slashCommands) {

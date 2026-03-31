@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref } from 'vue'
 import { nodeViewProps, NodeViewWrapper, NodeViewContent } from '@tiptap/vue-3'
 import { Button } from '@meldui/vue'
 import {
@@ -13,58 +13,25 @@ const columnCount = computed(() => props.node.childCount)
 const canAdd = computed(() => columnCount.value < 3)
 const canRemove = computed(() => columnCount.value > 2)
 
-const containerRef = ref<HTMLElement | null>(null)
 const isHovered = ref(false)
-
-// Dismiss bubble on outside click
-function onDocumentMousedown(event: MouseEvent) {
-  if (!props.selected) return
-  if (containerRef.value?.contains(event.target as HTMLElement)) return
-  props.editor.commands.setTextSelection(1)
-  props.editor.commands.blur()
-}
-
-onMounted(() => {
-  document.addEventListener('mousedown', onDocumentMousedown)
-})
-
-onBeforeUnmount(() => {
-  document.removeEventListener('mousedown', onDocumentMousedown)
-})
-
-function addColumn() {
-  props.editor.commands.addColumn()
-}
-
-function removeColumn() {
-  props.editor.commands.removeColumn()
-}
-
-function flatten() {
-  props.editor.commands.unsetColumns()
-}
 </script>
 
 <template>
   <NodeViewWrapper
     class="column-block py-2 my-3"
-    :data-columns="columnCount"
     @mouseenter="isHovered = true"
     @mouseleave="isHovered = false"
   >
-    <div
-      ref="containerRef"
-      class="relative"
-    >
+    <div class="relative">
       <!-- Bubble menu -->
       <div
-        v-show="selected || isHovered"
+        v-show="isHovered"
         class="absolute -top-12 left-1/2 -translate-x-1/2 z-50 flex items-center gap-0.5 rounded-lg border border-border bg-popover p-1 shadow-lg whitespace-nowrap"
       >
         <TooltipProvider :delay-duration="400">
           <Tooltip v-if="canAdd">
             <TooltipTrigger as-child>
-              <Button variant="ghost" size="icon-sm" @click.stop="addColumn">
+              <Button variant="ghost" size="icon-sm" @click.stop="editor.commands.addColumn()">
                 <IconPlus :size="16" />
               </Button>
             </TooltipTrigger>
@@ -72,7 +39,7 @@ function flatten() {
           </Tooltip>
           <Tooltip v-if="canRemove">
             <TooltipTrigger as-child>
-              <Button variant="ghost" size="icon-sm" @click.stop="removeColumn">
+              <Button variant="ghost" size="icon-sm" @click.stop="editor.commands.removeColumn()">
                 <IconMinus :size="16" />
               </Button>
             </TooltipTrigger>
@@ -80,7 +47,7 @@ function flatten() {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button variant="ghost" size="icon-sm" @click.stop="flatten">
+              <Button variant="ghost" size="icon-sm" @click.stop="editor.commands.unsetColumns()">
                 <IconLayoutRows :size="16" />
               </Button>
             </TooltipTrigger>

@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
-import type { MentionItem } from "@/components/editor";
+import type {
+    MentionItem,
+    CustomComponentRegistration,
+} from "@/components/editor";
 import { MeldEditor, useThemeMode } from "@/components/editor";
 import { Button } from "@meldui/vue";
-import { IconSun, IconMoon } from "@meldui/tabler-vue";
+import { IconSun, IconMoon, IconListCheck } from "@meldui/tabler-vue";
+import PollNodeView from "@/components/custom/poll/PollNodeView.vue";
 
 const { mode, applyTheme, removeTheme } = useThemeMode();
 
@@ -34,6 +38,26 @@ const demoUsers: MentionItem[] = [
     { id: "user-5", label: "Eve Davis" },
 ];
 
+const customComponents: CustomComponentRegistration[] = [
+    {
+        name: "interactivePoll",
+        component: PollNodeView,
+        atom: true,
+        draggable: true,
+        group: "block",
+        attrs: {
+            entityId: { default: null },
+        },
+        slashCommand: {
+            title: "Poll",
+            description: "Insert an interactive poll",
+            icon: IconListCheck,
+            keywords: ["poll", "survey", "vote", "question"],
+        },
+        confirmDelete: true,
+    },
+];
+
 async function searchMentions(query: string): Promise<MentionItem[]> {
     await new Promise((r) => setTimeout(r, 300)); // simulate latency
     if (!query) return demoUsers;
@@ -57,6 +81,7 @@ async function searchMentions(query: string): Promise<MentionItem[]> {
             <MeldEditor
                 v-model="content"
                 :on-mention-search="searchMentions"
+                :custom-components="customComponents"
             />
         </div>
     </div>

@@ -40,6 +40,8 @@ export interface CustomComponentRegistration {
     defaultAttrs?: Record<string, unknown>
   }
   attrs?: Record<string, { default: unknown }>
+  /** Block keyboard deletion (Backspace/Delete) — component handles its own delete confirmation */
+  confirmDelete?: boolean
 }
 
 // --- Extension opt-out config ---

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Editor } from '@tiptap/core'
 import type { Component } from 'vue'
+import { NodeSelection } from '@tiptap/pm/state'
 import { BubbleMenu } from '@tiptap/vue-3/menus'
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
@@ -44,9 +45,15 @@ function alignItems(editor: Editor): BubbleItem[] {
   <BubbleMenu
     :editor="editor"
     :tippy-options="{ maxWidth: 'none', zIndex: 50 }"
-    :should-show="({ editor: e }) => {
-      if (e.isActive('image') || e.isActive('tableOfContentsNode') || e.isActive('meldChart') || e.isActive('columnBlock')) return false
-      return e.state.selection.content().size > 0
+    :should-show="({ editor: e, state }) => {
+      const { selection } = state
+      if (selection.content().size === 0) return false
+      // Only show for text selections inside nodes that support inline formatting
+      if (selection instanceof NodeSelection) return false
+      const node = selection.$from.parent
+      const type = node.type.name
+      return ['paragraph', 'heading', 'blockquote', 'listItem', 'taskItem', 'tableCell', 'tableHeader'].includes(type)
+        || (!!node.type.spec.group?.includes('block') && node.isTextblock)
     }"
   >
     <TooltipProvider :delay-duration="400">

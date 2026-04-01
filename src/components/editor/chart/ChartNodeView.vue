@@ -89,7 +89,7 @@ function onConfigUpdate(newConfig: Record<string, unknown>, newType: string, new
       <!-- Configured: show chart + controls -->
       <template v-if="isConfigured">
         <!-- Bubble controls when selected -->
-        <div v-if="selected" class="absolute -top-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-0.5 rounded-lg border border-border bg-popover p-1 shadow-lg">
+        <div v-if="selected" class="absolute -top-12 left-1/2 -translate-x-1/2 z-50 flex items-center gap-0.5 rounded-lg border border-border bg-popover p-1 shadow-lg">
           <TooltipProvider :delay-duration="400">
             <Tooltip>
               <TooltipTrigger as-child>

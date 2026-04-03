@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
-import {
-  Button, Input, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from '@meldui/vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
+import { Button, Input, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@meldui/vue'
 import { IconSettings, IconTrash, IconPlus, IconX, IconCheck, IconCircle, IconEye, IconEyeOff } from '@meldui/tabler-vue'
-import { usePollStore, type PollEntity } from './usePollStore'
+import { usePollStore } from './usePollStore'
 import PollSetupDialog from './PollSetupDialog.vue'
 
 const props = defineProps<{
@@ -16,7 +13,6 @@ const props = defineProps<{
   editor: any
   getPos: () => number
   extension: any
-  confirmDelete: boolean
 }>()
 
 const store = usePollStore()
@@ -30,7 +26,6 @@ const editingOptionId = ref<string | null>(null)
 const optionDraft = ref('')
 const containerRef = ref<HTMLElement | null>(null)
 const setupOpen = ref(false)
-const confirmDeleteOpen = ref(false)
 
 // --- Computed from node attrs + store ---
 const entityId = computed(() => props.node.attrs.entityId as string | null)
@@ -55,12 +50,10 @@ onMounted(() => {
     setupOpen.value = true
   }
   document.addEventListener('mousedown', onDocumentMousedown)
-  document.addEventListener('keydown', onKeydown)
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('mousedown', onDocumentMousedown)
-  document.removeEventListener('keydown', onKeydown)
 })
 
 function onDocumentMousedown(event: MouseEvent) {
@@ -193,41 +186,11 @@ function toggleMultiSelect() {
 }
 
 // --- Delete ---
-function doDelete() {
-  if (entityId.value) {
-    store.deletePoll(entityId.value)
-  }
+// Just call deleteNode(). The factory wrapper handles confirmation if confirmDelete is true.
+// Store cleanup happens on unmount — when the node is actually removed from the editor.
+function deletePoll() {
   props.deleteNode()
 }
-
-function requestDelete() {
-  if (props.confirmDelete) {
-    confirmDeleteOpen.value = true
-  } else {
-    doDelete()
-  }
-}
-
-function onConfirmDelete() {
-  confirmDeleteOpen.value = false
-  doDelete()
-}
-
-// When confirmDelete is true, the extension blocks Backspace/Delete at
-// ProseMirror level. This listener catches the same keypress to show the dialog.
-function onKeydown(event: KeyboardEvent) {
-  if (!props.selected || !props.confirmDelete) return
-  if (event.key === 'Backspace' || event.key === 'Delete') {
-    requestDelete()
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('keydown', onKeydown)
-})
-onBeforeUnmount(() => {
-  document.removeEventListener('keydown', onKeydown)
-})
 </script>
 
 <template>
@@ -248,7 +211,7 @@ onBeforeUnmount(() => {
     <template v-else-if="!poll">
       <div class="flex items-center justify-between rounded-lg border border-dashed border-border bg-muted/30 p-6">
         <span class="text-sm text-muted-foreground">Poll not found — the data may have been cleared.</span>
-        <Button variant="ghost" size="sm" class="text-destructive" @click="requestDelete">
+        <Button variant="ghost" size="sm" class="text-destructive" @click="deletePoll">
           <IconTrash :size="14" class="mr-1" /> Remove
         </Button>
       </div>
@@ -276,7 +239,7 @@ onBeforeUnmount(() => {
                 variant="ghost"
                 size="icon-sm"
                 class="text-destructive hover:bg-destructive/10"
-                @click.stop="requestDelete"
+                @click.stop="deletePoll"
               >
                 <IconTrash :size="16" />
               </Button>
@@ -421,21 +384,5 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </template>
-
-    <!-- Delete confirmation dialog -->
-    <Dialog :open="confirmDeleteOpen" @update:open="confirmDeleteOpen = $event">
-      <DialogContent class="sm:max-w-sm" @mousedown.stop>
-        <DialogHeader>
-          <DialogTitle>Delete poll?</DialogTitle>
-          <DialogDescription>
-            This will remove the poll and all its data. This action cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="ghost" @click="confirmDeleteOpen = false">Cancel</Button>
-          <Button variant="destructive" @click="onConfirmDelete">Delete</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   </div>
 </template>

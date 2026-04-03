@@ -159,6 +159,10 @@ const customComponents: CustomComponentRegistration[] = [
       icon: IconListCheck,
       keywords: ['poll', 'survey', 'vote', 'question'],
     },
+    confirmDelete: true,            // Show confirmation dialog before deletion
+    onDelete: (attrs) => {          // Cleanup: remove entity from external store
+      if (attrs.entityId) pollStore.deletePoll(attrs.entityId as string)
+    },
   },
 ]
 ```
@@ -297,7 +301,7 @@ All interactions update the external store, **not** node attrs:
 | **Edit option text** | Via settings panel, input fields for each option |
 | **Toggle results** | Local `ref<boolean>` — switches between voting and results view |
 | **Toggle multi-select** | Update `entity.multiSelect`, trim `voted` to 1 if switching to single |
-| **Delete poll** | `store.deletePoll(entityId)` + `deleteNode()` |
+| **Delete poll** | Calls `deleteNode()` → confirmation dialog appears (see Section 11) → on confirm, `onDelete` callback runs `store.deletePoll(entityId)` then node is removed |
 
 ### Setup Dialog
 
@@ -477,6 +481,10 @@ const customComponents = [
       icon: IconListCheck,
       keywords: ['poll', 'survey', 'vote'],
     },
+    confirmDelete: true,
+    onDelete: (attrs) => {
+      if (attrs.entityId) pollStore.deletePoll(attrs.entityId)
+    },
   },
 ]
 </script>
@@ -509,6 +517,10 @@ const customComponents: CustomComponentRegistration[] = [
       icon: IconListCheck,
       keywords: ['poll', 'survey', 'vote'],
     },
+    confirmDelete: true,
+    onDelete: (attrs) => {
+      if (attrs.entityId) pollStore.deletePoll(attrs.entityId)
+    },
   },
   {
     name: 'calloutBlock',
@@ -521,6 +533,10 @@ const customComponents: CustomComponentRegistration[] = [
       description: 'Insert a callout block',
       icon: IconInfoCircle,
       keywords: ['callout', 'alert', 'info', 'warning', 'note'],
+    },
+    confirmDelete: true,
+    onDelete: (attrs) => {
+      if (attrs.entityId) calloutStore.deleteCallout(attrs.entityId)
     },
   },
 ]
@@ -626,7 +642,104 @@ Each poll has its own `entityId`, pointing to independent entities in the store:
 
 ---
 
-## 10. Technical Notes
+## 10. Delete Confirmation & Entity Cleanup
+
+### Overview
+
+Custom components that manage external state (e.g., a Poll entity in a store) need cleanup when deleted. The `confirmDelete` and `onDelete` fields in `CustomComponentRegistration` provide this:
+
+- `confirmDelete: true` — intercepts deletion (Backspace, Delete key, or `deleteNode()` calls) and shows a confirmation dialog before proceeding.
+- `onDelete(attrs)` — called after confirmation with the node's attrs. Use it to clean up external state (e.g., `pollStore.deletePoll(attrs.entityId)`).
+
+### Delete Confirmation Dialog
+
+The dialog is **type-aware** — it shows the block type name and count, not generic "block" text. The display name is derived from `slashCommand.title` (if provided) or the capitalised `name`.
+
+**Single block (button click or NodeSelection + Backspace):**
+
+```
+┌──────────────────────────────────────┐
+│  Delete this Poll?                   │
+│                                      │
+│  This will remove the Poll block     │
+│  and all its data. This action       │
+│  cannot be undone.                   │
+│                                      │
+│              [Cancel]  [Delete]      │
+└──────────────────────────────────────┘
+```
+
+**Multiple blocks, same type (range selection with 2 polls):**
+
+```
+┌──────────────────────────────────────┐
+│  Delete 2 Poll blocks?               │
+│                                      │
+│  This will remove 2 Poll blocks      │
+│  and all their data. This action     │
+│  cannot be undone.                   │
+│                                      │
+│              [Cancel]  [Delete]      │
+└──────────────────────────────────────┘
+```
+
+**Multiple blocks, multiple types (range with 2 polls + 1 callout):**
+
+```
+┌──────────────────────────────────────┐
+│  Delete 3 blocks?                    │
+│                                      │
+│  This will remove:                   │
+│  • 2 Poll blocks                     │
+│  • 1 Callout block                   │
+│  This action cannot be undone.       │
+│                                      │
+│              [Cancel]  [Delete]      │
+└──────────────────────────────────────┘
+```
+
+### Cross-Type Cleanup Guarantee
+
+When a range selection contains multiple custom node types with `confirmDelete`, a single dialog is shown listing all affected types. On confirmation, `onDelete` is called for **every** matching node in the range — not just the first — before the selection is deleted. This ensures entity cleanup happens for all blocks.
+
+```
+User selects: [paragraph] [Poll A] [Poll B] [Chart C] [paragraph]
+                           ↓         ↓         ↓
+Dialog shows:   "Delete 3 blocks? • 2 Poll blocks • 1 Chart block"
+                           ↓         ↓         ↓
+On confirm:     onDelete({entityId: "poll-a"})
+                onDelete({entityId: "poll-b"})
+                onDelete({entityId: "chart-c"})
+                → entire selection deleted
+```
+
+Non-`confirmDelete` nodes in the selection (paragraphs, images, etc.) are deleted silently as part of the range — only `confirmDelete` nodes appear in the dialog and trigger cleanup callbacks.
+
+### How It Works (Implementation)
+
+Each extension with `confirmDelete: true` stores `_displayName` and `_onDelete` in its `addStorage()`. When Backspace/Delete is pressed:
+
+1. The first extension whose type appears in the selection scans ALL nodes in the range
+2. For each node, it checks `editor.extensionStorage[typeName]._displayName` — if present, that type has `confirmDelete`
+3. It builds a `DeleteDialogItem[]` with counts per type and shows one dialog
+4. On confirmation, it walks the range again and calls `editor.extensionStorage[typeName]._onDelete(attrs)` for each matching node
+5. The full selection is then deleted
+
+If the winning extension's type is NOT in the selection, it yields (`return false`) so the next extension in the ProseMirror handler chain gets a chance.
+
+### DeleteDialogItem Type
+
+```typescript
+/** Used by ConfirmDeleteDialog to render type-aware messages. */
+interface DeleteDialogItem {
+  name: string   // Human-readable type name (e.g., "Poll", "Chart")
+  count: number  // How many nodes of this type are being deleted
+}
+```
+
+---
+
+## 11. Technical Notes
 
 ### Input Focus Inside Atom Nodes
 

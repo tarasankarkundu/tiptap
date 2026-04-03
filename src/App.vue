@@ -8,6 +8,7 @@ import { MeldEditor, useThemeMode } from "@/components/editor";
 import { Button } from "@meldui/vue";
 import { IconSun, IconMoon, IconListCheck } from "@meldui/tabler-vue";
 import PollNodeView from "@/components/custom/poll/PollNodeView.vue";
+import { usePollStore } from "@/components/custom/poll/usePollStore";
 
 const { mode, applyTheme, removeTheme } = useThemeMode();
 
@@ -38,6 +39,8 @@ const demoUsers: MentionItem[] = [
     { id: "user-5", label: "Eve Davis" },
 ];
 
+const pollStore = usePollStore();
+
 const customComponents: CustomComponentRegistration[] = [
     {
         name: "interactivePoll",
@@ -55,6 +58,12 @@ const customComponents: CustomComponentRegistration[] = [
             keywords: ["poll", "survey", "vote", "question"],
         },
         confirmDelete: true,
+        onDelete: (attrs) => {
+            console.log("==================", attrs.entityId);
+            if (attrs.entityId) {
+                pollStore.deletePoll(attrs.entityId as string);
+            }
+        },
     },
 ];
 

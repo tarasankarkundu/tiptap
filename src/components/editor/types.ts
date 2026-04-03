@@ -40,8 +40,20 @@ export interface CustomComponentRegistration {
     defaultAttrs?: Record<string, unknown>
   }
   attrs?: Record<string, { default: unknown }>
-  /** Block keyboard deletion (Backspace/Delete) — component handles its own delete confirmation */
+  /** Show a confirmation dialog before deleting this node (Backspace, Delete key, or deleteNode() calls). */
   confirmDelete?: boolean
+  /**
+   * Called after deletion is confirmed (or immediately if confirmDelete is false).
+   * Use this for entity cleanup (e.g. removing data from an external store).
+   * Receives the node's attrs at the time of deletion.
+   */
+  onDelete?: (attrs: Record<string, unknown>) => void
+}
+
+/** Describes a block type to be deleted — used by ConfirmDeleteDialog. */
+export interface DeleteDialogItem {
+  name: string
+  count: number
 }
 
 // --- Extension opt-out config ---

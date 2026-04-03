@@ -526,6 +526,39 @@ interface CustomComponentRegistration {
     defaultAttrs?: Record<string, unknown>
   }
   attrs?: Record<string, { default: unknown }>  // Node attributes (serialized to JSON)
+  confirmDelete?: boolean         // Show confirmation dialog before deletion (default: false)
+  onDelete?: (attrs: Record<string, unknown>) => void  // Cleanup callback after deletion confirmed
+}
+```
+
+### Delete Confirmation
+
+When `confirmDelete: true`, deletion is intercepted at two levels:
+
+- **Component button** — calling the `deleteNode` prop shows a confirmation dialog instead of deleting immediately.
+- **Keyboard** — Backspace/Delete is blocked when the selection contains the node; a confirmation dialog is shown.
+
+The dialog is **type-aware**: it shows the block type name (derived from `slashCommand.title` or capitalised `name`) and count.
+
+| Scenario | Dialog title | Dialog description |
+|----------|-------------|-------------------|
+| Single block | "Delete this Poll?" | "This will remove the Poll block and all its data..." |
+| Multiple same type | "Delete 2 Poll blocks?" | "This will remove 2 Poll blocks and all their data..." |
+| Multiple types | "Delete 3 blocks?" | Bulleted list: "2 Poll blocks", "1 Chart block" |
+
+**Cross-type awareness:** When a range selection spans multiple custom node types with `confirmDelete`, one dialog lists all affected types. On confirmation, `onDelete` is called for **every** matching node before the selection is deleted — ensuring cleanup happens for all entities, not just the first.
+
+The `onDelete` callback receives the node's `attrs` at the time of deletion. Use it for entity cleanup (e.g., removing data from an external store):
+
+```ts
+{
+  name: 'interactivePoll',
+  component: PollNodeView,
+  confirmDelete: true,
+  onDelete: (attrs) => {
+    if (attrs.entityId) pollStore.deletePoll(attrs.entityId as string)
+  },
+  // ...
 }
 ```
 

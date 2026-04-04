@@ -35,7 +35,8 @@
     "@tiptap/vue-3": "^3.19.0",
     "tailwindcss": "^4.2.2",
     "tippy.js": "^6.3.7",
-    "vue": "^3.5.27"
+    "vue": "^3.5.27",
+    "vue-router": "^5.0.4"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

@@ -143,7 +143,7 @@ function downloadImage() {
 
 <template>
     <NodeViewWrapper
-        class="flex w-full py-1"
+        class="flex w-full py-4"
         :style="{ justifyContent: wrapperJustify }"
     >
         <div
@@ -296,7 +296,7 @@ function downloadImage() {
                 <span
                     ref="captionRef"
                     class="inline-block min-w-15 text-sm text-muted-foreground outline-none leading-relaxed"
-                    contenteditable="true"
+                    :contenteditable="props.editor.isEditable"
                     @input="onCaptionInput"
                     @keydown="onCaptionKeydown"
                     >{{ caption }}</span

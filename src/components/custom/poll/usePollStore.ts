@@ -14,12 +14,32 @@ export interface PollEntity {
   voted: string[]
 }
 
+const STORAGE_KEY = 'meld-polls'
+
 const store = reactive(new Map<string, PollEntity>())
+
+// Hydrate from localStorage
+try {
+  const raw = localStorage.getItem(STORAGE_KEY)
+  if (raw) {
+    const entries: PollEntity[] = JSON.parse(raw)
+    for (const poll of entries) {
+      store.set(poll.id, poll)
+    }
+  }
+} catch {
+  // Ignore corrupt data
+}
+
+function persist() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(store.values())))
+}
 
 export function usePollStore() {
   function createPoll(data: Omit<PollEntity, 'id'>): string {
     const id = crypto.randomUUID()
     store.set(id, { ...data, id })
+    persist()
     return id
   }
 
@@ -31,10 +51,12 @@ export function usePollStore() {
     const poll = store.get(id)
     if (!poll) return
     Object.assign(poll, updates)
+    persist()
   }
 
   function deletePoll(id: string) {
     store.delete(id)
+    persist()
   }
 
   return { createPoll, getPoll, updatePoll, deletePoll }

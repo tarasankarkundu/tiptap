@@ -189,7 +189,7 @@ defineExpose<MeldEditorExposed>({
         >
             <!-- Drag handle -->
             <DragHandle
-                v-if="editor"
+                v-if="editor && editable"
                 ref="dragHandleRef"
                 :editor="editor"
                 :container-el="editorBodyRef"
@@ -207,7 +207,7 @@ defineExpose<MeldEditorExposed>({
 
             <!-- Table controls -->
             <TableControls
-                v-if="editor"
+                v-if="editor && editable"
                 :editor="editor"
                 :container-el="editorBodyRef"
             />
@@ -229,6 +229,35 @@ defineExpose<MeldEditorExposed>({
 /* Bubble menu — wrapper z-index must beat table-controls (z-index: 15) */
 :deep([tippy-options]) {
     z-index: 50 !important;
+}
+
+/* ── Read-only mode: disable all interactive affordances ── */
+:deep(.tiptap:not([contenteditable="true"])) {
+    /* Hide all node-view bubble menus */
+    [data-node-view-wrapper] .absolute.z-50 {
+        display: none !important;
+    }
+    /* Hide image resize handles */
+    [data-node-view-wrapper] .cursor-col-resize {
+        display: none !important;
+    }
+    /* Reset image container cursor */
+    [data-node-view-wrapper] .cursor-pointer {
+        cursor: default !important;
+    }
+    /* Disable task-list checkbox interactivity */
+    ul[data-type="taskList"] li > label input[type="checkbox"] {
+        cursor: default;
+        pointer-events: none;
+    }
+    /* Hide table column-resize handles */
+    .column-resize-handle {
+        display: none !important;
+    }
+    /* Reset mention cursor */
+    .mention {
+        cursor: default;
+    }
 }
 
 /* ── Editor container ── */

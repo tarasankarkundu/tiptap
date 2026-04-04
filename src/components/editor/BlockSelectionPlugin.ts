@@ -1,11 +1,10 @@
 import { Extension } from '@tiptap/core'
-import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state'
+import { Plugin, PluginKey, TextSelection, NodeSelection } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
 import type { Node as PmNode } from '@tiptap/pm/model'
 
 export const blockSelectionKey = new PluginKey('blockSelection')
 
-/** Persisted block selection — indices of selected top-level blocks (inclusive). */
 export interface BlockRange {
   low: number
   high: number
@@ -20,10 +19,7 @@ export function topBlockIndex(doc: PmNode, pos: number): number {
   return $pos.index(0)
 }
 
-/**
- * Get the document position range [from, to) for top-level blocks
- * between indices low..high (inclusive).
- */
+/** Get the document position range for top-level blocks low..high (inclusive). */
 export function posRangeForBlocks(doc: PmNode, low: number, high: number): { from: number; to: number } {
   let from = 0
   let to = 0
@@ -36,8 +32,9 @@ export function posRangeForBlocks(doc: PmNode, low: number, high: number): { fro
   return { from, to }
 }
 
-/** Build decorations for blocks between indices low..high (inclusive). */
+/** Build decorations for blocks low..high (inclusive). Returns empty if < 2 blocks. */
 function decorationsForRange(doc: PmNode, low: number, high: number): DecorationSet {
+  if (low === high) return DecorationSet.empty
   const decorations: Decoration[] = []
   let i = 0
   doc.forEach((node, pos) => {
@@ -46,15 +43,14 @@ function decorationsForRange(doc: PmNode, low: number, high: number): Decoration
     }
     i++
   })
-  if (decorations.length <= 1) return DecorationSet.empty
   return DecorationSet.create(doc, decorations)
 }
 
 /**
  * Notion-like block selection.
  *
- * State management, decorations, and keyboard shortcuts live here.
- * Mouse handling is in MeldEditor.vue so it works from anywhere on screen.
+ * State + decorations + keyboard shortcuts live here.
+ * Mouse handling is in useBlockSelection.ts composable.
  */
 export const BlockSelection = Extension.create({
   name: 'blockSelection',
@@ -65,12 +61,7 @@ export const BlockSelection = Extension.create({
       if (blockSelectionKey.getState(state)) return true
       const { from, to } = state.selection
       if (from === to) return false
-      let count = 0
-      state.doc.forEach((node, pos) => {
-        const end = pos + node.nodeSize
-        if (pos < to && end > from) count++
-      })
-      return count > 1
+      return topBlockIndex(state.doc, from) !== topBlockIndex(state.doc, to)
     }
 
     const deleteBlockSelection = (): boolean => {
@@ -80,6 +71,7 @@ export const BlockSelection = Extension.create({
 
       const { from, to } = posRangeForBlocks(state.doc, range.low, range.high)
 
+      // Check for confirmDelete nodes (custom components like polls)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const extStorage = this.editor.extensionStorage as Record<string, any>
       const typeCounts = new Map<string, number>()
@@ -95,7 +87,6 @@ export const BlockSelection = Extension.create({
           name: extStorage[name]._displayName as string,
           count,
         }))
-
         for (const [typeName] of typeCounts) {
           const handlers = extStorage[typeName]?._confirmDeleteHandlers
           if (handlers) {
@@ -145,28 +136,19 @@ export const BlockSelection = Extension.create({
 
         props: {
           decorations(state) {
+            // 1. Drag-based block selection
             const range = blockSelectionKey.getState(state) as BlockRange | null
-
             if (range) {
               return decorationsForRange(state.doc, range.low, range.high)
             }
 
-            // Fallback: keyboard selections spanning multiple blocks
-            const { from, to } = state.selection
-            if (from === to) return DecorationSet.empty
-
-            const decorations: Decoration[] = []
-            state.doc.forEach((node, pos) => {
-              const nodeEnd = pos + node.nodeSize
-              if (pos < to && nodeEnd > from) {
-                decorations.push(
-                  Decoration.node(pos, nodeEnd, { class: 'block-selected' }),
-                )
-              }
-            })
-
-            if (decorations.length <= 1) return DecorationSet.empty
-            return DecorationSet.create(state.doc, decorations)
+            // 2. Fallback: keyboard text selections spanning multiple blocks
+            //    Skip NodeSelection (clicking a block node) — let native behavior handle it
+            const sel = state.selection
+            if (sel instanceof NodeSelection || sel.from === sel.to) return DecorationSet.empty
+            const fromBlock = topBlockIndex(state.doc, sel.from)
+            const toBlock = topBlockIndex(state.doc, sel.to)
+            return decorationsForRange(state.doc, fromBlock, toBlock)
           },
         },
       }),

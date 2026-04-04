@@ -5,13 +5,13 @@ import { blockSelectionKey, topBlockIndex, type BlockRange } from './BlockSelect
 
 /**
  * Handles block selection mouse events at document level.
- * - Drag within the editor wrapper triggers block selection (including margins)
- * - Click outside the editor wrapper clears selection
- * - Smooth dragging across the entire viewport
+ * - Drag within the editor root triggers block selection (including margins)
+ * - Click outside the editor root clears selection
+ * - Document-level mousemove/mouseup for smooth cross-viewport dragging
  */
 export function useBlockSelection(
   editor: ShallowRef<Editor | undefined>,
-  wrapperRef: Ref<HTMLElement | null>,
+  rootRef: Ref<HTMLElement | null>,
 ) {
   let dragAnchor: number | null = null
   let isDragging = false
@@ -20,42 +20,48 @@ export function useBlockSelection(
     const view = editor.value?.view
     if (!view) return null
     const rect = view.dom.getBoundingClientRect()
-    const clampedX = Math.max(rect.left + 1, Math.min(clientX, rect.right - 1))
-    const clampedY = Math.max(rect.top + 1, Math.min(clientY, rect.bottom - 1))
-    const pos = view.posAtCoords({ left: clampedX, top: clampedY })
+    // Clamp to editor content area so posAtCoords works from margins too
+    const x = Math.max(rect.left + 1, Math.min(clientX, rect.right - 1))
+    const y = Math.max(rect.top + 1, Math.min(clientY, rect.bottom - 1))
+    const pos = view.posAtCoords({ left: x, top: y })
     if (pos) return topBlockIndex(view.state.doc, pos.pos)
     if (clientY < rect.top) return 0
     if (clientY > rect.bottom) return view.state.doc.childCount - 1
     return null
   }
 
-  function clearState() {
+  function hasActiveSelection(): boolean {
     const view = editor.value?.view
-    if (!view) return
+    if (!view) return false
+    if (blockSelectionKey.getState(view.state)) return true
+    const { from, to } = view.state.selection
+    return from !== to && topBlockIndex(view.state.doc, from) !== topBlockIndex(view.state.doc, to)
+  }
+
+  function clearSelection() {
+    const view = editor.value?.view
+    if (!view || !hasActiveSelection()) return
     const { state } = view
-    const prev = blockSelectionKey.getState(state) as BlockRange | null
-    const { from, to } = state.selection
-    if (prev || from !== to) {
-      const tr = state.tr.setMeta(blockSelectionKey, null)
-      tr.setSelection(TextSelection.create(state.doc, state.selection.from))
-      view.dispatch(tr)
-    }
+    const tr = state.tr.setMeta(blockSelectionKey, null)
+    tr.setSelection(TextSelection.create(state.doc, state.selection.from))
+    view.dispatch(tr)
   }
 
   function onMousedown(event: MouseEvent) {
-    if (event.button !== 0) return
-    if (!editor.value?.view) return
+    if (event.button !== 0 || !editor.value?.view) return
+    const target = event.target as HTMLElement
 
-    const isInsideWrapper = wrapperRef.value?.contains(event.target as Node)
-
-    if (!isInsideWrapper) {
-      // Click outside — just clear selection, don't start tracking
-      clearState()
+    if (!rootRef.value?.contains(target)) {
+      clearSelection()
       return
     }
 
-    // Click inside wrapper — clear previous selection and start tracking
-    clearState()
+    // Don't interfere with clicks on buttons/controls (bubble menus, drag handle, etc.)
+    if (target.closest('button, [role="button"], [data-drag-handle]')) {
+      return
+    }
+
+    clearSelection()
     const idx = resolveBlockIndex(event.clientX, event.clientY)
     if (idx === null) return
     dragAnchor = idx

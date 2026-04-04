@@ -85,12 +85,9 @@ export function createDefaultExtensions(options: {
         ? d.placeholder
         : options.placeholder ?? 'Type / for commands...'
     exts.push(Placeholder.configure({
-      placeholder: ({ node, hasAnchor, editor }) => {
+      placeholder: ({ node, hasAnchor }) => {
         if (!hasAnchor) return ''
-        // Only show on text blocks (paragraph, heading, etc.), not wrapper nodes (column, columnBlock)
         if (!node.isTextblock) return ''
-        // Only show placeholder when the document is empty (single empty paragraph)
-        if (editor.state.doc.childCount > 1 || node.type.name !== 'paragraph') return ''
         return text
       },
       includeChildren: true,

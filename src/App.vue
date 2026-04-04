@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
-import { useThemeMode } from '@/components/editor'
+import { useThemeMode } from '@/composables/useThemeMode'
 import AppLayout from '@/layouts/AppLayout.vue'
 
 const { mode, applyTheme, removeTheme } = useThemeMode()

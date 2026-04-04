@@ -26,7 +26,6 @@ import { useBlockSelection } from "./useBlockSelection";
 import type { SlashCommandItem } from "./types";
 
 const props = withDefaults(defineProps<MeldEditorProps>(), {
-    modelValue: "",
     showToolbar: false,
     showBubbleMenu: true,
     editable: true,
@@ -115,27 +114,15 @@ const resolvedExtensions = computed(() => {
 
 // Create editor
 const editor = useEditor({
-    content: props.modelValue,
     extensions: resolvedExtensions.value,
     editable: props.editable,
     onUpdate: ({ editor: e }) => {
-        emit("update:modelValue", e.getHTML());
         emit("update:json", e.getJSON());
     },
     onCreate: ({ editor: e }) => emit("created", e),
     onFocus: ({ event }) => emit("focus", event),
     onBlur: ({ event }) => emit("blur", event),
 });
-
-// Watch external content changes
-watch(
-    () => props.modelValue,
-    (newVal) => {
-        if (editor.value && newVal !== editor.value.getHTML()) {
-            editor.value.commands.setContent(newVal ?? "");
-        }
-    },
-);
 
 // Watch editable changes
 watch(
@@ -156,17 +143,6 @@ useBlockSelection(editor, editorRootRef);
 // Expose
 defineExpose<MeldEditorExposed>({
     editor: editor.value,
-    getHTML: () => editor.value?.getHTML() ?? "",
-    getJSON: () => editor.value?.getJSON() ?? {},
-    setContent: (content: string) => {
-        editor.value?.commands.setContent(content);
-    },
-    focus: () => {
-        editor.value?.commands.focus();
-    },
-    blur: () => {
-        editor.value?.commands.blur();
-    },
 });
 </script>
 
@@ -192,7 +168,7 @@ defineExpose<MeldEditorExposed>({
 
         <div
             ref="editorBodyRef"
-            class="relative w-full"
+            class="relative w-full overflow-hidden"
             :class="editorClass"
             style="padding-left: 56px; padding-right: 16px"
             @mousemove="dragHandleRef?.handleMouseMove($event)"
@@ -268,6 +244,10 @@ defineExpose<MeldEditorExposed>({
     /* Reset mention cursor */
     .mention {
         cursor: default;
+    }
+    /* Hide column hover border */
+    .column:hover {
+        border-color: transparent;
     }
 }
 
@@ -427,7 +407,8 @@ defineExpose<MeldEditorExposed>({
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    padding-top: 0.2rem;
+    /* Align checkbox with the first line of text (line-height 1.625 * 1rem font = 26px, center at 13px, minus 8px half-checkbox = 5px) */
+    margin-top: 0.3rem;
 }
 
 :deep(.tiptap ul[data-type="taskList"] li > label input[type="checkbox"]) {
@@ -466,6 +447,11 @@ defineExpose<MeldEditorExposed>({
     width: 100%;
     margin: 1rem 0;
     table-layout: fixed;
+}
+
+/* Prevent Placeholder's ::before from breaking table row/cell layout */
+:deep(.tiptap table .is-empty::before) {
+    display: none !important;
 }
 
 :deep(.tiptap table td),
@@ -520,12 +506,15 @@ defineExpose<MeldEditorExposed>({
     display: none !important;
 }
 
+:deep(.tiptap .is-empty) {
+    position: relative;
+}
+
 :deep(.tiptap .is-empty::before) {
     content: attr(data-placeholder);
-    float: left;
     color: var(--muted-foreground);
     pointer-events: none;
-    height: 0;
+    position: absolute;
 }
 
 /* ── Mentions ── */

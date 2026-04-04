@@ -31,7 +31,7 @@ import {
     IconMoon,
 } from '@meldui/tabler-vue'
 import { useDocumentStore } from '@/composables/useDocumentStore'
-import { useThemeMode } from '@/components/editor'
+import { useThemeMode } from '@/composables/useThemeMode'
 
 const route = useRoute()
 const router = useRouter()

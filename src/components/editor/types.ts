@@ -71,7 +71,6 @@ export interface DefaultExtensionOptions {
 
 // --- Editor Props ---
 export interface MeldEditorProps {
-  modelValue?: string
   defaultExtensions?: DefaultExtensionOptions
   extraExtensions?: (Extension | Mark | TiptapNode)[]
   overrideExtensions?: (Extension | Mark | TiptapNode)[]
@@ -94,7 +93,6 @@ export interface MeldEditorProps {
 
 // --- Editor Emits ---
 export type MeldEditorEmits = {
-  'update:modelValue': [html: string]
   'update:json': [json: Record<string, unknown>]
   'created': [editor: Editor]
   'focus': [event: FocusEvent]
@@ -104,9 +102,4 @@ export type MeldEditorEmits = {
 // --- Editor Exposed ---
 export interface MeldEditorExposed {
   editor: Editor | undefined
-  getHTML: () => string
-  getJSON: () => Record<string, unknown>
-  setContent: (content: string) => void
-  focus: () => void
-  blur: () => void
 }

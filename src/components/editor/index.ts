@@ -3,7 +3,6 @@ export { createCustomNodeExtension } from './custom-components/CustomNodeExtensi
 export { ChartNode } from './chart/ChartNodeExtension'
 export { createDefaultToolbarItems, resolveSlashCommands } from './defaults'
 export { defaultSlashCommands } from './slash-commands/defaultSlashCommands'
-export { useThemeMode } from '@/composables/useThemeMode'
 export type {
   SlashCommandItem,
   ToolbarItem,

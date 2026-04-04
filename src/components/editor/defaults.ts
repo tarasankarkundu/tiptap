@@ -18,6 +18,7 @@ import { ColumnBlockExtension } from './columns/ColumnBlockExtension'
 import { createMentionExtension } from './mention/MentionExtension'
 import { createSlashCommandExtension } from './slash-commands/SlashCommandExtension'
 import { defaultSlashCommands } from './slash-commands/defaultSlashCommands'
+import { BlockSelection } from './BlockSelectionPlugin'
 import {
   IconBold, IconItalic, IconH1, IconH2,
   IconList, IconListCheck,
@@ -31,7 +32,7 @@ export function createDefaultExtensions(options: {
   onMentionSearch?: (query: string) => Promise<MentionItem[]>
 }): (Extension | Mark | TiptapNode)[] {
   const d = options.defaults ?? {}
-  const exts: (Extension | Mark | TiptapNode)[] = [StarterKit]
+  const exts: (Extension | Mark | TiptapNode)[] = [StarterKit, BlockSelection]
 
   if (d.taskList !== false) {
     exts.push(TaskList)
@@ -84,7 +85,12 @@ export function createDefaultExtensions(options: {
         ? d.placeholder
         : options.placeholder ?? 'Type / for commands...'
     exts.push(Placeholder.configure({
-      placeholder: text,
+      placeholder: ({ node, hasAnchor }) => {
+        if (!hasAnchor) return ''
+        // Only show on text blocks (paragraph, heading, etc.), not wrapper nodes (column, columnBlock)
+        if (!node.isTextblock) return ''
+        return text
+      },
       includeChildren: true,
     }))
   }

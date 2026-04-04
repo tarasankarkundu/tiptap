@@ -2,7 +2,7 @@ import { Extension } from '@tiptap/core'
 import { Suggestion } from '@tiptap/suggestion'
 import type { SuggestionOptions } from '@tiptap/suggestion'
 import tippy, { type Instance as TippyInstance } from 'tippy.js'
-import { createApp, reactive, h, type App } from 'vue'
+import { createApp, shallowReactive, h, type App } from 'vue'
 import SlashCommandList from './SlashCommandList.vue'
 import type { SlashCommandItem } from '../types'
 
@@ -27,7 +27,7 @@ export function createSlashCommandExtension(commandItems: SlashCommandItem[]) {
             let app: App | undefined
             let container: HTMLElement | undefined
 
-            const state = reactive({
+            const state = shallowReactive({
               items: [] as SlashCommandItem[],
               command: (() => {}) as (item: SlashCommandItem) => void,
             })

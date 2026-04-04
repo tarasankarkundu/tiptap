@@ -45,9 +45,11 @@ function alignItems(editor: Editor): BubbleItem[] {
   <BubbleMenu
     :editor="editor"
     :tippy-options="{ maxWidth: 'none', zIndex: 50 }"
-    :should-show="({ editor: e, state }) => {
+    :should-show="({ editor: e, state, view }) => {
       const { selection } = state
       if (selection.content().size === 0) return false
+      // Hide during block selection (drag-based or multi-block)
+      if (view.dom.querySelector('.block-selected')) return false
       // Only show for text selections inside nodes that support inline formatting
       if (selection instanceof NodeSelection) return false
       const node = selection.$from.parent

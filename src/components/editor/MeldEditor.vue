@@ -24,7 +24,7 @@ const props = withDefaults(defineProps<MeldEditorProps>(), {
     showToolbar: false,
     showBubbleMenu: true,
     editable: true,
-    placeholder: "Type / for commands...",
+    placeholder: "Write, type '/' for commands\u2026",
     editorClass: "",
 });
 
@@ -243,6 +243,37 @@ defineExpose<MeldEditorExposed>({
     outline: none !important;
 }
 
+/* Notion-like block highlight for cross-block selections.
+   Uses ::after overlay so it covers opaque content (images, charts, polls). */
+:deep(.tiptap .block-selected) {
+    position: relative;
+}
+
+:deep(.tiptap .block-selected)::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: color-mix(in srgb, var(--primary) 20%, transparent);
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Hide per-node inline toolbars (bubble menus) during block selection.
+   All node-view bubble menus are absolutely positioned z-50 inside their wrapper. */
+:deep(.tiptap:has(.block-selected)) [data-node-view-wrapper] .absolute.z-50 {
+    display: none !important;
+}
+
+/* Suppress native text selection highlight when block selection is active */
+:deep(.tiptap:has(.block-selected)) *::selection {
+    background: transparent;
+}
+
+:deep(.tiptap:has(.block-selected)) {
+    caret-color: transparent;
+}
+
 /* ── Paragraphs ── */
 :deep(.tiptap p) {
     margin: 0.75rem 0;
@@ -449,7 +480,7 @@ defineExpose<MeldEditorExposed>({
     display: none !important;
 }
 
-:deep(.tiptap p.is-editor-empty:first-child::before) {
+:deep(.tiptap .is-empty::before) {
     content: attr(data-placeholder);
     float: left;
     color: var(--muted-foreground);

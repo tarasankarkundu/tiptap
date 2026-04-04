@@ -127,7 +127,7 @@ export function createCustomNodeExtension(registration: CustomComponentRegistrat
               console.error(`[MeldEditor] onDelete failed for ${typeName}:`, err)
             }
           })
-          editor.chain().focus().setTextSelection({ from, to }).deleteSelection().run()
+          editor.chain().focus().deleteRange({ from, to }).run()
         } else {
           pendingDeleteItems.value = []
           try {

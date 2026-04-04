@@ -1,6 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useEditor, EditorContent } from "@tiptap/vue-3";
+import {
+    blockSelectionKey,
+    topBlockIndex,
+    type BlockRange,
+} from "./BlockSelectionPlugin";
 import type {
     MeldEditorProps,
     MeldEditorEmits,
@@ -17,6 +22,7 @@ import TableControls from "./table/TableControls.vue";
 import DragHandle from "./drag-handle/DragHandle.vue";
 import ImageUrlDialog from "./image/ImageUrlDialog.vue";
 import { createCustomNodeExtension } from "./custom-components/CustomNodeExtension";
+import { useBlockSelection } from "./useBlockSelection";
 import type { SlashCommandItem } from "./types";
 
 const props = withDefaults(defineProps<MeldEditorProps>(), {
@@ -140,8 +146,12 @@ watch(
 );
 
 // Refs
+const editorRootRef = ref<HTMLElement | null>(null);
 const editorBodyRef = ref<HTMLElement | null>(null);
 const dragHandleRef = ref<InstanceType<typeof DragHandle> | null>(null);
+
+// Block selection mouse handling (clicks from anywhere, clears on outside click)
+useBlockSelection(editor, editorRootRef);
 
 // Expose
 defineExpose<MeldEditorExposed>({
@@ -162,9 +172,9 @@ defineExpose<MeldEditorExposed>({
 
 <template>
     <div
+        ref="editorRootRef"
         data-meld-editor
         class="w-full h-full bg-background text-foreground transition-colors"
-        :class="editorClass"
     >
         <!-- Header slot (app-level action bar) -->
         <slot name="header" :editor="editor" :editable="editable" />
@@ -183,6 +193,7 @@ defineExpose<MeldEditorExposed>({
         <div
             ref="editorBodyRef"
             class="relative w-full"
+            :class="editorClass"
             style="padding-left: 56px; padding-right: 16px"
             @mousemove="dragHandleRef?.handleMouseMove($event)"
             @mouseleave="dragHandleRef?.handleMouseLeave()"

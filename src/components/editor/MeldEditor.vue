@@ -163,7 +163,7 @@ defineExpose<MeldEditorExposed>({
 <template>
     <div
         data-meld-editor
-        class="w-full h-full rounded-lg border border-border bg-background text-foreground transition-colors"
+        class="w-full h-full bg-background text-foreground transition-colors"
         :class="editorClass"
     >
         <!-- Header slot (app-level action bar) -->

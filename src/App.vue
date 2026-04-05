@@ -1,8 +1,16 @@
 <script setup lang="ts">
-import '@/styles/global.css'
-import NotionEditor from '@/components/examples/NotionEditor.vue'
+import { onMounted, onUnmounted } from 'vue'
+import { useThemeMode } from '@/composables/useThemeMode'
+import AppLayout from '@/layouts/AppLayout.vue'
+
+const { mode, applyTheme, removeTheme } = useThemeMode()
+
+onMounted(() => applyTheme(mode.value))
+onUnmounted(() => removeTheme())
 </script>
 
 <template>
-  <NotionEditor />
+    <AppLayout>
+        <RouterView :key="$route.fullPath" />
+    </AppLayout>
 </template>

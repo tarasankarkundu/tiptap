@@ -16,6 +16,7 @@ const tbl = ref({ top: 0, left: 0, width: 0, height: 0 })
 const hoveredRow = ref(-1)
 const hoveredCol = ref(-1)
 const menu = ref<{ type: 'row' | 'col'; index: number; top: number; left: number } | null>(null)
+const menuRef = ref<HTMLElement | null>(null)
 let tableEl: HTMLElement | null = null
 
 function findTable() {
@@ -105,18 +106,18 @@ function onMouseMove(e: MouseEvent) {
   }
 }
 
-function openRowMenu(index: number, e: MouseEvent) {
-  focusCell(index, 0)
-  const cr = props.containerEl!.getBoundingClientRect()
+function openMenu(type: 'row' | 'col', index: number, e: MouseEvent) {
+  if (type === 'row') focusCell(index, 0); else focusCell(0, index)
   const br = (e.currentTarget as HTMLElement).getBoundingClientRect()
-  menu.value = { type: 'row', index, top: br.bottom - cr.top + 4, left: br.left - cr.left }
-}
-
-function openColMenu(index: number, e: MouseEvent) {
-  focusCell(0, index)
-  const cr = props.containerEl!.getBoundingClientRect()
-  const br = (e.currentTarget as HTMLElement).getBoundingClientRect()
-  menu.value = { type: 'col', index, top: br.bottom - cr.top + 4, left: br.left - cr.left }
+  // Place below first, then flip on nextTick if it overflows
+  menu.value = { type, index, top: br.bottom + 4, left: br.left }
+  nextTick(() => {
+    if (!menuRef.value) return
+    const menuRect = menuRef.value.getBoundingClientRect()
+    if (menuRect.bottom > window.innerHeight) {
+      menu.value = { type, index, top: br.top - 4 - menuRect.height, left: br.left }
+    }
+  })
 }
 
 function run(fn: () => void) {
@@ -146,12 +147,17 @@ function onDocClick(e: MouseEvent) {
 
 let unwatch: (() => void) | null = null
 
+function onScroll() {
+  if (menu.value) menu.value = null
+}
+
 onMounted(() => {
   const handler = () => nextTick(update)
   props.editor.on('transaction', handler)
   unwatch = () => props.editor.off('transaction', handler)
   document.addEventListener('click', onDocClick, true)
   document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('scroll', onScroll, true)
   update()
 })
 
@@ -159,6 +165,7 @@ onBeforeUnmount(() => {
   unwatch?.()
   document.removeEventListener('click', onDocClick, true)
   document.removeEventListener('mousemove', onMouseMove)
+  document.removeEventListener('scroll', onScroll, true)
 })
 </script>
 
@@ -171,7 +178,7 @@ onBeforeUnmount(() => {
       class="tc-handle absolute flex items-center justify-center h-[18px] border-0 rounded bg-accent/50 text-muted-foreground cursor-pointer p-0 opacity-0 pointer-events-none transition-opacity"
       :class="{ 'opacity-70 pointer-events-auto': hoveredCol === i || (menu?.type === 'col' && menu.index === i) }"
       :style="{ left: col.left + 'px', width: col.width + 'px', top: tbl.top - 20 + 'px' }"
-      @click.stop="openColMenu(i, $event)"
+      @click.stop="openMenu('col', i, $event)"
     >
       <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><circle cx="3" cy="6" r="1.2"/><circle cx="6" cy="6" r="1.2"/><circle cx="9" cy="6" r="1.2"/></svg>
     </button>
@@ -183,7 +190,7 @@ onBeforeUnmount(() => {
       class="tc-handle absolute flex items-center justify-center w-[18px] border-0 rounded bg-accent/50 text-muted-foreground cursor-pointer p-0 opacity-0 pointer-events-none transition-opacity"
       :class="{ 'opacity-70 pointer-events-auto': hoveredRow === i || (menu?.type === 'row' && menu.index === i) }"
       :style="{ top: row.top + 'px', height: row.height + 'px', left: tbl.left - 20 + 'px' }"
-      @click.stop="openRowMenu(i, $event)"
+      @click.stop="openMenu('row', i, $event)"
     >
       <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="3" r="1.2"/><circle cx="6" cy="6" r="1.2"/><circle cx="6" cy="9" r="1.2"/></svg>
     </button>
@@ -222,10 +229,14 @@ onBeforeUnmount(() => {
       </Tooltip>
     </TooltipProvider>
 
-    <!-- Context menu -->
+  </div>
+
+  <!-- Context menu (teleported to body to avoid overflow clipping) -->
+  <Teleport to="body">
     <div
       v-if="menu"
-      class="tc-menu absolute min-w-[200px] rounded-lg border border-border bg-popover p-1 shadow-lg z-[100] pointer-events-auto"
+      ref="menuRef"
+      class="tc-menu fixed min-w-[200px] rounded-lg border border-border bg-popover p-1 shadow-lg z-[100]"
       :style="{ top: menu.top + 'px', left: menu.left + 'px' }"
       @click.stop
     >
@@ -258,7 +269,7 @@ onBeforeUnmount(() => {
         <IconTrash :size="16" /> Delete table
       </button>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <style scoped>
